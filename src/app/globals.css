@@ -308,6 +308,33 @@ html {
 .animate-ach-confetti { animation: ach-confetti 1.2s ease-out forwards; }
 .animate-ach-icon-bounce { animation: ach-icon-bounce 0.6s ease-out; }
 
+/* ── Hero guide system ── */
+
+@keyframes guide-enter {
+  0% { opacity: 0; transform: translate(-50%, 20px) scale(0.9); }
+  100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@keyframes guide-exit {
+  0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, 20px) scale(0.9); }
+}
+
+@keyframes hero-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes guide-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.animate-guide-enter { animation: guide-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.animate-guide-exit { animation: guide-exit 0.3s ease-in forwards; }
+.animate-hero-bounce { animation: hero-bounce 1s ease-in-out infinite; }
+.animate-guide-pulse { animation: guide-pulse 1.5s ease-in-out infinite; }
+
 /* ── Sword shatter (destroy) ── */
 
 @keyframes sword-shatter-left {

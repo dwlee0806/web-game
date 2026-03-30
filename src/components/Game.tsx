@@ -11,7 +11,8 @@ import ShopTab from './ShopTab'
 import AchievementsTab from './AchievementsTab'
 import MissionsTab from './MissionsTab'
 import StatsTab from './StatsTab'
-import Tutorial from './Tutorial'
+import HeroGuide, { type GuideStep } from './HeroGuide'
+import HeroAvatar from './HeroAvatar'
 import BackgroundStars from './BackgroundStars'
 import SwordEffects from './SwordEffects'
 import EnhanceGauge from './EnhanceGauge'
@@ -118,7 +119,7 @@ export default function Game() {
   const [showMagicCircle, setShowMagicCircle] = useState(false)
   const [levelBurst, setLevelBurst] = useState(false)
   const [soundEnabled, setSoundEnabled] = useState(true)
-  const [showTutorial, setShowTutorial] = useState(false)
+  const [guideStep, setGuideStep] = useState<GuideStep>(null)
   const [offlineReward, setOfflineReward] = useState<{ gold: number; minutes: number } | null>(null)
   const [locale, setLocale] = useState<Locale>('ko')
   const [gaugeActive, setGaugeActive] = useState(false)
@@ -149,7 +150,9 @@ export default function Game() {
     setMissions(loadMissions(uid))
     setMounted(true)
     setLocale(detectLocale())
-    if (!localStorage.getItem('sword-tutorial-done')) setShowTutorial(true)
+    if (!localStorage.getItem('sword-guide-done')) {
+      setGuideStep('enhance_intro')
+    }
   }, [])
 
   useEffect(() => {
@@ -236,7 +239,14 @@ export default function Game() {
     const baseCost = getEnhanceCost(weaponLevel)
     const discount = getCostDiscount()
     const cost = Math.max(1, Math.floor(baseCost * (1 - discount / 100)))
-    if (s.gold < cost) { setAutoMode(false); return }
+    if (s.gold < cost) {
+      setAutoMode(false)
+      if (!localStorage.getItem('sword-guide-gold-shown')) {
+        setGuideStep('gold_empty')
+        localStorage.setItem('sword-guide-gold-shown', '1')
+      }
+      return
+    }
 
     const wantProtect = useProtection && s.protectionScrolls > 0
     const wantBless = useBlessing && s.blessingScrolls > 0
@@ -479,7 +489,16 @@ export default function Game() {
 
   return (
     <div className="h-dvh bg-gray-950 lg:bg-transparent text-white flex flex-col select-none relative z-10 overflow-hidden">
-      {showTutorial && <Tutorial onComplete={() => { setShowTutorial(false); localStorage.setItem('sword-tutorial-done', '1') }} />}
+      <HeroGuide step={guideStep} onDismiss={() => {
+        if (guideStep === 'enhance_intro') {
+          setGuideStep(null)
+          localStorage.setItem('sword-guide-done', '1')
+        } else if (guideStep === 'gold_empty') {
+          setGuideStep(null)
+        } else {
+          setGuideStep(null)
+        }
+      }} />
       <BackgroundStars level={state.level} color={tier.color} />
 
       {/* Center panel backdrop with side fade */}
@@ -539,8 +558,8 @@ export default function Game() {
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-lg font-bold text-gray-300">⚔️ {t('title', locale)}</h1>
             {userId ? (
-              <button onClick={handleLogout} className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors">
-                👤 {userId} · 로그아웃
+              <button onClick={handleLogout} className="flex items-center gap-1 text-[10px] text-gray-600 hover:text-gray-400 transition-colors">
+                <HeroAvatar size={16} expression="normal" /> {userId} · 로그아웃
               </button>
             ) : (
               <button onClick={() => { setMounted(false); setAutoMode(false) }} className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors">
@@ -797,8 +816,8 @@ function EnhanceContent({
         {/* Battle CTAs */}
         <div className="flex gap-2">
           <a href="/arena" className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-700 to-orange-600 hover:from-red-600 hover:to-orange-500 font-bold text-center transition-all active:scale-[0.98] shadow-lg shadow-red-900/30">
-            <span className="text-sm">🗡️ 전장</span>
-            <span className="block text-[8px] text-red-200/60">몬스터 사냥</span>
+            <span className="text-sm">🗡️ 던전</span>
+            <span className="block text-[8px] text-red-200/60">몬스터 토벌</span>
           </a>
           <a href="/pvp" className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-violet-700 to-indigo-600 hover:from-violet-600 hover:to-indigo-500 font-bold text-center transition-all active:scale-[0.98] shadow-lg shadow-violet-900/30">
             <span className="text-sm">⚔️ PvP</span>

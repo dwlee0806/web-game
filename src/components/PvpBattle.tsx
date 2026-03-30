@@ -7,6 +7,7 @@ import {
   type PvpState,
 } from '@/lib/pvp'
 import { getLevelTier } from '@/lib/gameLogic'
+import HeroAvatar from './HeroAvatar'
 
 interface PvpBattleProps {
   playerLevel: number
@@ -174,8 +175,8 @@ export default function PvpBattle({ playerLevel, playerName, weapon, onFinish }:
       <div className="flex items-center justify-between w-full max-w-sm mb-4">
         {/* Player */}
         <div className="text-center">
-          <div className="text-2xl mb-1">⚔️</div>
-          <div className="text-sm font-bold">{state.player.name}</div>
+          <HeroAvatar size={36} expression="excited" />
+          <div className="text-sm font-bold mt-1">{state.player.name}</div>
           <div className="text-xs font-bold" style={{ color: playerTier.color }}>+{state.player.level} {playerTier.name}</div>
           <div className="w-20 h-2 bg-gray-800 rounded-full mt-1 overflow-hidden">
             <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${(state.player.hp / state.player.maxHp) * 100}%` }} />

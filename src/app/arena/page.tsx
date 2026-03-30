@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import ArenaGame from '@/components/ArenaGame'
 import type { ArenaRecord } from '@/lib/arena/types'
 import { addGoldToSave, loadSwordLevel } from '@/lib/saveUtils'
+import HeroAvatar from '@/components/HeroAvatar'
 
 const RECORDS_KEY = 'sword-arena-records'
 
@@ -51,8 +52,8 @@ export default function ArenaPage() {
       <div className="min-h-dvh bg-gray-950 text-white flex flex-col items-center justify-center px-4">
         <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(239,68,68,0.08) 0%, transparent 60%)' }} />
         <div className="relative z-10 text-center max-w-sm">
-          <div className="text-6xl mb-4">⚔️</div>
-          <h1 className="text-3xl font-black mb-2">전장</h1>
+          <div className="mb-4"><HeroAvatar size={64} expression="excited" /></div>
+          <h1 className="text-3xl font-black mb-2">던전</h1>
           <p className="text-gray-400 text-sm mb-6">
             강화한 검으로 몬스터를 무찌르세요!<br />
             오래 살아남을수록 더 많은 골드를 획득합니다.
@@ -68,7 +69,7 @@ export default function ArenaPage() {
             onClick={() => setStarted(true)}
             className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 font-bold text-lg transition-all active:scale-[0.98] shadow-lg shadow-red-900/40"
           >
-            🗡️ 전장 입장
+            🗡️ 던전 입장
           </button>
           <button
             onClick={() => router.push('/')}
