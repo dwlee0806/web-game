@@ -39,6 +39,7 @@ import { type Achievement, getNewAchievements } from '@/lib/achievements'
 import { playEnhanceStart, playSuccess, playMaintain, playDestroy, playCheckIn, playBuy, playAchievement, playClick } from '@/lib/sounds'
 import { WEAPONS } from '@/lib/weapons'
 import { getActiveEvents, getSuccessBoost, getCostDiscount } from '@/lib/events'
+import { detectLocale, t, type Locale } from '@/lib/i18n'
 import {
   type DailyMissionState,
   getInitialMissionState,
@@ -110,6 +111,7 @@ export default function Game() {
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [showTutorial, setShowTutorial] = useState(false)
   const [offlineReward, setOfflineReward] = useState<{ gold: number; minutes: number } | null>(null)
+  const [locale, setLocale] = useState<Locale>('ko')
 
   const stateRef = useRef(state)
   stateRef.current = state
@@ -135,6 +137,7 @@ export default function Game() {
     setState(loaded)
     setMissions(loadMissions())
     setMounted(true)
+    setLocale(detectLocale())
     if (!localStorage.getItem('sword-tutorial-done')) setShowTutorial(true)
   }, [])
 
@@ -437,11 +440,11 @@ export default function Game() {
 
       <div className="relative z-10 flex flex-col flex-1 max-w-md mx-auto w-full">
         <header className="px-4 pt-5 pb-2">
-          <h1 className="text-center text-lg font-bold text-gray-300 mb-3">⚔️ 검 강화 시뮬레이터</h1>
+          <h1 className="text-center text-lg font-bold text-gray-300 mb-3">⚔️ {t('title', locale)}</h1>
           <div className="flex items-center justify-between">
             <div className="text-yellow-400 font-bold text-lg">💰 {state.gold.toLocaleString()}G</div>
             <button onClick={handleCheckIn} disabled={!checkable} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all active:scale-95 ${checkable ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}`}>
-              {checkable ? '📅 출석체크' : '✅ 출석완료'}
+              {checkable ? `📅 ${t('checkin', locale)}` : `✅ ${t('checkin_done', locale)}`}
             </button>
           </div>
           {state.prestige > 0 && (
@@ -452,8 +455,8 @@ export default function Game() {
           )}
           {offlineReward && (
             <div className="text-center mt-2 animate-result-in">
-              <p className="text-yellow-400 font-bold text-sm">💤 오프라인 보상: +{offlineReward.gold.toLocaleString()}G</p>
-              <p className="text-gray-500 text-xs">{offlineReward.minutes}분 동안 수집</p>
+              <p className="text-yellow-400 font-bold text-sm">💤 {t('offline_reward', locale)}: +{offlineReward.gold.toLocaleString()}G</p>
+              <p className="text-gray-500 text-xs">{offlineReward.minutes}{t('offline_collected', locale)}</p>
             </div>
           )}
         </header>
@@ -517,11 +520,11 @@ export default function Game() {
 
         <nav className="flex border-t border-gray-800/60 bg-gray-950/90 backdrop-blur">
           {([
-            { key: 'enhance' as Tab, icon: '⚔️', label: '강화' },
-            { key: 'shop' as Tab, icon: '🏪', label: '상점' },
-            { key: 'missions' as Tab, icon: '📋', label: '미션', badge: unclaimedMissions },
-            { key: 'achievements' as Tab, icon: '🏆', label: '업적' },
-            { key: 'stats' as Tab, icon: '📊', label: '통계' },
+            { key: 'enhance' as Tab, icon: '⚔️', label: t('tab_enhance', locale) },
+            { key: 'shop' as Tab, icon: '🏪', label: t('tab_shop', locale) },
+            { key: 'missions' as Tab, icon: '📋', label: t('tab_missions', locale), badge: unclaimedMissions },
+            { key: 'achievements' as Tab, icon: '🏆', label: t('tab_achievements', locale) },
+            { key: 'stats' as Tab, icon: '📊', label: t('tab_stats', locale) },
           ]).map(t => (
             <button key={t.key} onClick={() => { setAutoMode(false); setTab(t.key) }} className={`flex-1 py-3 text-center transition-colors relative ${tab === t.key ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>
               <div className="text-lg">{t.icon}</div>
