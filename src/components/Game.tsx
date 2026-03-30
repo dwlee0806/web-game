@@ -28,6 +28,10 @@ import {
   isStreakContinued,
   getLevelTier,
   getFailStackBonus,
+  canPrestige,
+  getPrestigePoints,
+  getPrestigeReward,
+  getOfflineGold,
 } from '@/lib/gameLogic'
 import { type Achievement, getNewAchievements } from '@/lib/achievements'
 import { playEnhanceStart, playSuccess, playMaintain, playDestroy, playCheckIn, playBuy, playAchievement, playClick } from '@/lib/sounds'
@@ -95,6 +99,7 @@ export default function Game() {
   const [levelBurst, setLevelBurst] = useState(false)
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [showTutorial, setShowTutorial] = useState(false)
+  const [offlineReward, setOfflineReward] = useState<{ gold: number; minutes: number } | null>(null)
 
   const stateRef = useRef(state)
   stateRef.current = state
@@ -106,13 +111,26 @@ export default function Game() {
   soundRef.current = soundEnabled
 
   useEffect(() => {
-    setState(loadState())
+    const loaded = loadState()
+    // Offline gold calculation
+    if (loaded.lastOnline && loaded.lastOnline > 0) {
+      const reward = getOfflineGold(loaded.lastOnline, loaded.prestige)
+      if (reward.gold > 0) {
+        loaded.gold += reward.gold
+        setOfflineReward(reward)
+        setTimeout(() => setOfflineReward(null), 4000)
+      }
+    }
+    loaded.lastOnline = Date.now()
+    setState(loaded)
     setMissions(loadMissions())
     setMounted(true)
     if (!localStorage.getItem('sword-tutorial-done')) setShowTutorial(true)
   }, [])
 
-  useEffect(() => { if (mounted) saveState(state) }, [state, mounted])
+  useEffect(() => {
+    if (mounted) saveState({ ...state, lastOnline: Date.now() })
+  }, [state, mounted])
   useEffect(() => { if (mounted) saveMissions(missions) }, [missions, mounted])
 
   const progressMission = useCallback((ids: string[], amounts?: Record<string, number>) => {
@@ -176,7 +194,7 @@ export default function Game() {
     const wantProtect = useProtection && s.protectionScrolls > 0
     const wantBless = useBlessing && s.blessingScrolls > 0
 
-    const rawResult = rollEnhance(weaponLevel, wantBless, s.failStack)
+    const rawResult = rollEnhance(weaponLevel, wantBless, s.failStack + (s.prestigeBonus ?? 0) * 2)
     const wasDestroyed = rawResult === 'destroy'
     const r = wasDestroyed && wantProtect ? 'maintain' : rawResult
 
@@ -216,6 +234,7 @@ export default function Game() {
         blessingScrolls: prev.blessingScrolls - (wantBless ? 1 : 0),
         enhanceLog: [entry, ...prev.enhanceLog.slice(0, MAX_LOG - 1)],
         weapons: updatedWeapons,
+        totalGoldSpent: (prev.totalGoldSpent ?? 0) + cost,
         failStack: r === 'success' ? 0 : prev.failStack + 1,
         maxFailStack: Math.max(prev.maxFailStack, r === 'success' ? prev.failStack : prev.failStack + 1),
       }
@@ -308,6 +327,29 @@ export default function Game() {
     if (soundRef.current) playBuy()
   }, [])
 
+  const handlePrestige = useCallback(() => {
+    const s = stateRef.current
+    if (!canPrestige(s.highestLevel)) return
+    const points = getPrestigePoints(s.highestLevel)
+    if (!confirm(`환생하시겠습니까?\n\n레벨, 무기, 주문서가 초기화됩니다.\n획득: 프레스티지 +${points}포인트\n(영구 성공률 보너스 + 골드 배율 증가)`)) return
+
+    const newPrestige = s.prestige + points
+    const { bonus, goldMultiplier } = getPrestigeReward(s.highestLevel, s.prestige)
+    setState(prev => ({
+      ...INITIAL_STATE,
+      gold: 1000 + Math.floor(1000 * goldMultiplier),
+      prestige: newPrestige,
+      prestigeBonus: bonus,
+      totalGoldSpent: prev.totalGoldSpent,
+      achievements: prev.achievements,
+      lastCheckIn: prev.lastCheckIn,
+      checkInStreak: prev.checkInStreak,
+      lastOnline: Date.now(),
+    }))
+    setAutoMode(false)
+    if (soundRef.current) playAchievement()
+  }, [])
+
   const handleReset = useCallback(() => {
     if (confirm('정말 초기화하시겠습니까? 모든 데이터가 삭제됩니다.')) {
       setAutoMode(false)
@@ -360,8 +402,17 @@ export default function Game() {
               {checkable ? '📅 출석체크' : '✅ 출석완료'}
             </button>
           </div>
+          {state.prestige > 0 && (
+            <div className="text-center text-xs text-purple-400 mt-1">⭐ 프레스티지 {state.prestige} (성공률 +{(state.prestigeBonus ?? 0).toFixed(1)}%)</div>
+          )}
           {checkInReward !== null && (
             <p className="text-center text-emerald-400 font-bold text-sm mt-2 animate-float-up">+{checkInReward}G 획득! (연속 {state.checkInStreak}일)</p>
+          )}
+          {offlineReward && (
+            <div className="text-center mt-2 animate-result-in">
+              <p className="text-yellow-400 font-bold text-sm">💤 오프라인 보상: +{offlineReward.gold.toLocaleString()}G</p>
+              <p className="text-gray-500 text-xs">{offlineReward.minutes}분 동안 수집</p>
+            </div>
           )}
         </header>
 
@@ -380,7 +431,29 @@ export default function Game() {
               onReset={handleReset}
             />
           )}
-          {tab === 'shop' && <ShopTab gold={state.gold} protectionScrolls={state.protectionScrolls} blessingScrolls={state.blessingScrolls} onBuy={handleBuy} />}
+          {tab === 'shop' && (
+            <div className="space-y-4">
+              <ShopTab gold={state.gold} protectionScrolls={state.protectionScrolls} blessingScrolls={state.blessingScrolls} onBuy={handleBuy} />
+              {/* Prestige section */}
+              <div className="glass-card rounded-xl p-4">
+                <h3 className="text-sm font-bold text-purple-400 mb-2">⭐ 환생 (프레스티지)</h3>
+                <p className="text-xs text-gray-400 mb-3">레벨과 무기를 초기화하고 영구 보너스를 획득합니다.</p>
+                {canPrestige(state.highestLevel) ? (
+                  <>
+                    <div className="text-xs text-gray-300 mb-2 space-y-1">
+                      <p>획득 포인트: <span className="text-purple-400 font-bold">+{getPrestigePoints(state.highestLevel)}</span></p>
+                      <p>현재 보너스: 성공률 +{(state.prestigeBonus ?? 0).toFixed(1)}% / 골드 x{(1 + (state.prestige ?? 0) * 0.1).toFixed(1)}</p>
+                    </div>
+                    <button onClick={handlePrestige} className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 font-bold text-sm transition-all active:scale-[0.98]">
+                      ⭐ 환생하기
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-xs text-gray-600">+10 이상 달성 시 환생 가능</p>
+                )}
+              </div>
+            </div>
+          )}
           {tab === 'missions' && <MissionsTab missions={missions} onClaim={handleClaimMission} />}
           {tab === 'achievements' && <AchievementsTab achieved={state.achievements} />}
         </div>

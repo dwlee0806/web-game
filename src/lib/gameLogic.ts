@@ -29,6 +29,10 @@ export interface GameState {
   weapons: Record<string, WeaponData>
   failStack: number
   maxFailStack: number
+  prestige: number
+  prestigeBonus: number
+  totalGoldSpent: number
+  lastOnline: number
 }
 
 export const INITIAL_STATE: GameState = {
@@ -49,6 +53,10 @@ export const INITIAL_STATE: GameState = {
   weapons: { sword: { level: 0, highestLevel: 0 } },
   failStack: 0,
   maxFailStack: 0,
+  prestige: 0,
+  prestigeBonus: 0,
+  totalGoldSpent: 0,
+  lastOnline: Date.now(),
 }
 
 export const MAX_LEVEL = 30
@@ -134,3 +142,35 @@ export const SHOP = {
 } as const
 
 export type ShopItem = keyof typeof SHOP
+
+// Prestige: reset level/weapons, gain permanent bonuses
+export function getPrestigeReward(highestLevel: number, currentPrestige: number): { bonus: number; goldMultiplier: number } {
+  // Each prestige point gives +0.5% success rate and 1.1x gold multiplier
+  const newPoints = Math.floor(highestLevel / 5) // 1 point per 5 levels achieved
+  const totalBonus = (currentPrestige + newPoints) * 0.5
+  const goldMultiplier = 1 + (currentPrestige + newPoints) * 0.1
+  return { bonus: Math.min(totalBonus, 50), goldMultiplier: Math.min(goldMultiplier, 5) }
+}
+
+export function canPrestige(highestLevel: number): boolean {
+  return highestLevel >= 10 // Need at least +10 to prestige
+}
+
+export function getPrestigePoints(highestLevel: number): number {
+  return Math.floor(highestLevel / 5)
+}
+
+// Offline gold: based on time away and prestige level
+export function getOfflineGold(lastOnline: number, prestige: number): { gold: number; minutes: number } {
+  const now = Date.now()
+  const diffMs = now - lastOnline
+  const minutes = Math.floor(diffMs / (1000 * 60))
+  if (minutes < 1) return { gold: 0, minutes: 0 }
+
+  const cappedMinutes = Math.min(minutes, 480) // Max 8 hours
+  const baseRate = 10 // 10 gold per minute base
+  const prestigeMultiplier = 1 + prestige * 0.5
+  const gold = Math.floor(cappedMinutes * baseRate * prestigeMultiplier)
+
+  return { gold, minutes: cappedMinutes }
+}
