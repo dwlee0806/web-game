@@ -33,6 +33,7 @@ import {
   getPrestigePoints,
   getPrestigeReward,
   getOfflineGold,
+  rollSpecialSkin,
 } from '@/lib/gameLogic'
 import { type Achievement, getNewAchievements } from '@/lib/achievements'
 import { playEnhanceStart, playSuccess, playMaintain, playDestroy, playCheckIn, playBuy, playAchievement, playClick } from '@/lib/sounds'
@@ -255,6 +256,11 @@ export default function Game() {
       const updatedWeapons = { ...prev.weapons, [prev.activeWeapon]: { level: newLevel, highestLevel: Math.max(wep.highestLevel, newLevel) } }
       // Bug fix: count actual destroy (not protected maintain)
       const actualDestroy = wasDestroyed && !wantProtect
+      // Easter egg: 5% chance of special skin on destroy
+      const newSkin = actualDestroy ? rollSpecialSkin(prev.discoveredSkins ?? []) : prev.specialSkin
+      const newDiscovered = newSkin && actualDestroy && !(prev.discoveredSkins ?? []).includes(newSkin)
+        ? [...(prev.discoveredSkins ?? []), newSkin]
+        : (prev.discoveredSkins ?? [])
       const updated: GameState = {
         ...prev,
         level: newLevel,
@@ -271,6 +277,8 @@ export default function Game() {
         totalGoldSpent: (prev.totalGoldSpent ?? 0) + cost,
         failStack: r === 'success' ? 0 : prev.failStack + 1,
         maxFailStack: Math.max(prev.maxFailStack, r === 'success' ? prev.failStack : prev.failStack + 1),
+        specialSkin: newSkin,
+        discoveredSkins: newDiscovered,
       }
       return awardAchievements(updated)
     })
@@ -570,7 +578,7 @@ function EnhanceContent({
         )}
 
         <div className={`${enhancing && !result ? 'animate-enhance' : ''} ${result === 'destroy' ? 'animate-shake' : ''} ${!enhancing && state.level > 0 ? 'animate-sword-breathe' : ''}`}>
-          <Sword level={state.level} color={tier.color} weaponType={state.activeWeapon} />
+          <Sword level={state.level} color={tier.color} weaponType={state.activeWeapon} specialSkin={state.specialSkin} />
         </div>
         <div className="mt-2 text-center">
           <div className={`text-5xl font-black transition-all duration-300 text-glow ${result === 'success' ? 'animate-pop' : ''}`} style={{ color: tier.color }}>+{state.level}</div>

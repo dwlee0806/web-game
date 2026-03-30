@@ -172,3 +172,14 @@
 .animate-star-twinkle {
   animation: star-twinkle ease-in-out infinite;
 }
+
+/* ── Floating gem orbit ── */
+
+@keyframes orbit {
+  0% { transform: rotate(0deg) translateY(-60px); }
+  100% { transform: rotate(360deg) translateY(-60px); }
+}
+
+.animate-orbit {
+  animation: orbit 3s linear infinite;
+}

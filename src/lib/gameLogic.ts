@@ -33,6 +33,8 @@ export interface GameState {
   prestigeBonus: number
   totalGoldSpent: number
   lastOnline: number
+  specialSkin: string | null
+  discoveredSkins: string[]
 }
 
 export const INITIAL_STATE: GameState = {
@@ -57,6 +59,20 @@ export const INITIAL_STATE: GameState = {
   prestigeBonus: 0,
   totalGoldSpent: 0,
   lastOnline: Date.now(),
+  specialSkin: null,
+  discoveredSkins: [],
+}
+
+export const SPECIAL_SKINS = ['rainbow', 'void', 'crystal', 'flame', 'shadow'] as const
+
+export function rollSpecialSkin(discoveredSkins: string[]): string | null {
+  if (Math.random() > 0.05) return null // 5% chance
+  const available = SPECIAL_SKINS.filter(s => !discoveredSkins.includes(s))
+  if (available.length === 0) {
+    // All discovered, pick random
+    return SPECIAL_SKINS[Math.floor(Math.random() * SPECIAL_SKINS.length)]
+  }
+  return available[Math.floor(Math.random() * available.length)]
 }
 
 export const MAX_LEVEL = 30
