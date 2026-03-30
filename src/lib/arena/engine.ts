@@ -422,8 +422,21 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
   // Screen shake decay
   if (s.screenShake > 0) s.screenShake = Math.max(0, s.screenShake - 0.5)
 
-  // Game over
-  if (p.hp <= 0) { s.gameOver = true; s.player = { ...p, hp: 0 } }
+  // Game over — "Last Stand": first time HP drops to 0, restore 1 HP + 2s invincibility
+  if (p.hp <= 0) {
+    if (!s.gameOver && p.level > 1 && p.invincibleUntil < s.time - 120) {
+      // Last stand: one-time save
+      p.hp = 1
+      p.invincibleUntil = s.time + 120
+      s.screenShake = 15
+      s.waveAnnouncement = { text: '💀 LAST STAND!', life: 60, color: '#EF4444' }
+      s.particles.push(...spawnParticles(p.pos, '#EF4444', 10))
+      s.player = p
+    } else {
+      s.gameOver = true
+      s.player = { ...p, hp: 0 }
+    }
+  }
 
   return { state: s, events }
 }
