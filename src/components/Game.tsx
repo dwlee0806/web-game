@@ -599,7 +599,7 @@ export default function Game() {
         </div>
 
         {/* Bottom quick-access bar */}
-        <nav className="flex border-t border-gray-800/40 bg-gray-950/80 backdrop-blur-sm">
+        <nav className="flex shrink-0 border-t border-gray-800/40 bg-gray-950/80 backdrop-blur-sm relative z-20">
           {([
             { key: 'shop' as Tab, icon: '🏪', label: t('tab_shop', locale) },
             { key: 'missions' as Tab, icon: '📋', label: t('tab_missions', locale), badge: unclaimedMissions },
