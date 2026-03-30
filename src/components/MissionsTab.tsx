@@ -27,12 +27,12 @@ export default function MissionsTab({ missions, onClaim }: MissionsTabProps) {
         return (
           <div
             key={id}
-            className={`bg-gray-900/80 backdrop-blur rounded-xl p-4 border transition-all ${
+            className={`glass-card rounded-xl p-4 transition-all ${
               claimed
-                ? 'border-yellow-800/40 opacity-60'
+                ? 'opacity-60'
                 : completed
-                  ? 'border-emerald-700/60 ring-1 ring-emerald-600/30'
-                  : 'border-gray-800/60'
+                  ? 'ring-1 ring-emerald-600/30'
+                  : ''
             }`}
           >
             <div className="flex items-center justify-between mb-2">

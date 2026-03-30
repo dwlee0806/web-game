@@ -35,7 +35,7 @@ export default function ShopTab({
         return (
           <div
             key={key}
-            className="bg-gray-900/80 backdrop-blur rounded-xl p-4 border border-gray-800/60"
+            className="glass-card rounded-xl p-4"
           >
             <div className="flex items-start justify-between mb-3">
               <div>
@@ -80,7 +80,7 @@ export default function ShopTab({
         )
       })}
 
-      <div className="bg-gray-900/40 rounded-xl p-3 border border-gray-800/30">
+      <div className="glass-card rounded-xl p-3">
         <p className="text-xs text-gray-500 text-center">
           💡 강화 탭에서 주문서 사용을 ON/OFF 할 수 있어요
         </p>

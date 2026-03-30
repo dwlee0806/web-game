@@ -81,15 +81,19 @@ export default function GuidePage() {
               <p>성공률 +10% 보너스는 기본 확률이 낮을수록 체감이 큽니다.</p>
             </div>
             <div>
-              <h3 className="font-bold text-white mb-1">4. 자동 강화 활용</h3>
+              <h3 className="font-bold text-white mb-1">4. 페일스택 활용</h3>
+              <p>실패할 때마다 페일스택이 +1 쌓이고, 스택당 성공률 +0.5% (최대 +30%). 성공하면 리셋됩니다. 일부러 저레벨에서 스택을 쌓은 뒤 고레벨에서 강화하는 전략도 있습니다.</p>
+            </div>
+            <div>
+              <h3 className="font-bold text-white mb-1">5. 자동 강화 활용</h3>
               <p>저레벨 구간(+0~+6)은 자동 강화로 빠르게 올리세요.</p>
             </div>
             <div>
-              <h3 className="font-bold text-white mb-1">5. 출석체크 필수</h3>
+              <h3 className="font-bold text-white mb-1">6. 출석체크 필수</h3>
               <p>연속 출석 보너스가 쌓이면 하루 최대 2,000G까지 받을 수 있습니다.</p>
             </div>
             <div>
-              <h3 className="font-bold text-white mb-1">6. 일일 미션 확인</h3>
+              <h3 className="font-bold text-white mb-1">7. 일일 미션 확인</h3>
               <p>매일 3개 미션을 완료하면 추가 골드를 받을 수 있습니다.</p>
             </div>
           </div>

@@ -25,10 +25,10 @@ export default function AchievementsTab({ achieved }: AchievementsTabProps) {
           return (
             <div
               key={a.id}
-              className={`flex items-center gap-3 rounded-xl p-3 border transition-all ${
+              className={`flex items-center gap-3 rounded-xl p-3 transition-all ${
                 unlocked
-                  ? 'bg-gray-900/80 border-yellow-800/40'
-                  : 'bg-gray-900/40 border-gray-800/30 opacity-50'
+                  ? 'glass-card border-yellow-800/40'
+                  : 'bg-gray-900/30 border border-gray-800/20 opacity-50'
               }`}
             >
               <span className={`text-2xl ${unlocked ? '' : 'grayscale'}`}>
