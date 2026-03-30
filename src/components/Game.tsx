@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Sword from './Sword'
 import Particles from './Particles'
 import MagicCircle from './MagicCircle'
+import AdBanner from './AdBanner'
 import ShareButton from './ShareButton'
 import ShopTab from './ShopTab'
 import AchievementsTab from './AchievementsTab'
@@ -456,6 +457,8 @@ function EnhanceContent({
             <Stat label="출석" value={`${state.checkInStreak}일`} />
           </div>
         </div>
+
+        <AdBanner className="my-2 min-h-[100px] rounded-xl overflow-hidden" />
 
         <ShareButton state={state} />
 
