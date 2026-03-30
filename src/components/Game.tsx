@@ -13,6 +13,8 @@ import MissionsTab from './MissionsTab'
 import StatsTab from './StatsTab'
 import Tutorial from './Tutorial'
 import BackgroundStars from './BackgroundStars'
+import AuthScreen from './AuthScreen'
+import { getCurrentUser, logout, getUserSaveKey, getUserMissionKey } from '@/lib/auth'
 import {
   type GameState,
   type EnhanceResult,
@@ -46,22 +48,22 @@ import {
   getMissionById,
 } from '@/lib/missions'
 
-const STORAGE_KEY = 'sword-enhance-v2'
-const MISSIONS_KEY = 'sword-missions-v1'
+const DEFAULT_STORAGE_KEY = 'sword-enhance-v2'
+const DEFAULT_MISSIONS_KEY = 'sword-missions-v1'
 type Tab = 'enhance' | 'shop' | 'missions' | 'achievements' | 'stats'
 
-function loadState(): GameState {
+function loadState(userId: string | null): GameState {
   if (typeof window === 'undefined') return INITIAL_STATE
+  const key = userId ? getUserSaveKey(userId) : DEFAULT_STORAGE_KEY
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(key)
     if (!raw) {
-      const v1 = localStorage.getItem('sword-enhance-v1')
-      if (v1) {
-        const old = JSON.parse(v1)
-        return {
-          ...INITIAL_STATE,
-          ...old,
-          weapons: { sword: { level: old.level ?? 0, highestLevel: old.highestLevel ?? 0 } },
+      // v1 migration (guest only)
+      if (!userId) {
+        const v1 = localStorage.getItem('sword-enhance-v1')
+        if (v1) {
+          const old = JSON.parse(v1)
+          return { ...INITIAL_STATE, ...old, weapons: { sword: { level: old.level ?? 0, highestLevel: old.highestLevel ?? 0 } } }
         }
       }
       return INITIAL_STATE
@@ -72,15 +74,17 @@ function loadState(): GameState {
   }
 }
 
-function saveState(state: GameState) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) } catch { /* */ }
+function saveState(state: GameState, userId: string | null) {
+  const key = userId ? getUserSaveKey(userId) : DEFAULT_STORAGE_KEY
+  try { localStorage.setItem(key, JSON.stringify({ ...state, lastOnline: Date.now() })) } catch { /* */ }
 }
 
-function loadMissions(): DailyMissionState {
+function loadMissions(userId: string | null): DailyMissionState {
   const today = new Date().toISOString().split('T')[0]
   if (typeof window === 'undefined') return getInitialMissionState(today)
+  const key = userId ? getUserMissionKey(userId) : DEFAULT_MISSIONS_KEY
   try {
-    const raw = localStorage.getItem(MISSIONS_KEY)
+    const raw = localStorage.getItem(key)
     if (raw) {
       const parsed = JSON.parse(raw) as DailyMissionState
       if (parsed.date === today) return parsed
@@ -89,11 +93,14 @@ function loadMissions(): DailyMissionState {
   return getInitialMissionState(today)
 }
 
-function saveMissions(m: DailyMissionState) {
-  try { localStorage.setItem(MISSIONS_KEY, JSON.stringify(m)) } catch { /* */ }
+function saveMissions(m: DailyMissionState, userId: string | null) {
+  const key = userId ? getUserMissionKey(userId) : DEFAULT_MISSIONS_KEY
+  try { localStorage.setItem(key, JSON.stringify(m)) } catch { /* */ }
 }
 
 export default function Game() {
+  const [userId, setUserId] = useState<string | null>(null)
+  const [authChecked, setAuthChecked] = useState(false)
   const [state, setState] = useState<GameState>(INITIAL_STATE)
   const [missions, setMissions] = useState<DailyMissionState>(() => getInitialMissionState(new Date().toISOString().split('T')[0]))
   const [mounted, setMounted] = useState(false)
@@ -122,9 +129,8 @@ export default function Game() {
   const soundRef = useRef(soundEnabled)
   soundRef.current = soundEnabled
 
-  useEffect(() => {
-    const loaded = loadState()
-    // Offline gold calculation
+  const initGame = useCallback((uid: string | null) => {
+    const loaded = loadState(uid)
     if (loaded.lastOnline && loaded.lastOnline > 0) {
       const reward = getOfflineGold(loaded.lastOnline, loaded.prestige)
       if (reward.gold > 0) {
@@ -135,16 +141,25 @@ export default function Game() {
     }
     loaded.lastOnline = Date.now()
     setState(loaded)
-    setMissions(loadMissions())
+    setMissions(loadMissions(uid))
     setMounted(true)
     setLocale(detectLocale())
     if (!localStorage.getItem('sword-tutorial-done')) setShowTutorial(true)
   }, [])
 
   useEffect(() => {
-    if (mounted) saveState({ ...state, lastOnline: Date.now() })
-  }, [state, mounted])
-  useEffect(() => { if (mounted) saveMissions(missions) }, [missions, mounted])
+    const existingUser = getCurrentUser()
+    if (existingUser) {
+      setUserId(existingUser)
+      initGame(existingUser)
+    }
+    setAuthChecked(true)
+  }, [initGame])
+
+  useEffect(() => {
+    if (mounted) saveState(state, userId)
+  }, [state, mounted, userId])
+  useEffect(() => { if (mounted) saveMissions(missions, userId) }, [missions, mounted, userId])
 
   const progressMission = useCallback((ids: string[], amounts?: Record<string, number>) => {
     setMissions(prev => {
@@ -395,6 +410,13 @@ export default function Game() {
     if (soundRef.current) playAchievement()
   }, [])
 
+  const handleLogout = useCallback(() => {
+    logout()
+    setUserId(null)
+    setMounted(false)
+    setAutoMode(false)
+  }, [])
+
   const handleReset = useCallback(() => {
     if (confirm('정말 초기화하시겠습니까? 모든 데이터가 삭제됩니다.')) {
       setAutoMode(false)
@@ -404,7 +426,17 @@ export default function Game() {
     }
   }, [])
 
-  if (!mounted) return <div className="min-h-dvh bg-gray-950" />
+  if (!authChecked) return <div className="min-h-dvh bg-gray-950" />
+
+  // Show auth screen if not logged in and not guest
+  if (!mounted) {
+    return (
+      <AuthScreen
+        onAuth={(uid) => { setUserId(uid); initGame(uid) }}
+        onGuest={() => { setUserId(null); initGame(null) }}
+      />
+    )
+  }
 
   const tier = getLevelTier(state.level)
   const rates = getEnhanceRates(state.level)
@@ -440,7 +472,18 @@ export default function Game() {
 
       <div className="relative z-10 flex flex-col flex-1 max-w-md mx-auto w-full">
         <header className="px-4 pt-5 pb-2">
-          <h1 className="text-center text-lg font-bold text-gray-300 mb-3">⚔️ {t('title', locale)}</h1>
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-lg font-bold text-gray-300">⚔️ {t('title', locale)}</h1>
+            {userId ? (
+              <button onClick={handleLogout} className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors">
+                👤 {userId} · 로그아웃
+              </button>
+            ) : (
+              <button onClick={() => { setMounted(false); setAutoMode(false) }} className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors">
+                로그인
+              </button>
+            )}
+          </div>
           <div className="flex items-center justify-between">
             <div className="text-yellow-400 font-bold text-lg">💰 {state.gold.toLocaleString()}G</div>
             <button onClick={handleCheckIn} disabled={!checkable} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all active:scale-95 ${checkable ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}`}>
