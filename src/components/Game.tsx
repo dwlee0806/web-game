@@ -6,6 +6,7 @@ import Particles from './Particles'
 import MagicCircle from './MagicCircle'
 import AdBanner from './AdBanner'
 import ShareButton from './ShareButton'
+import WeaponSelect from './WeaponSelect'
 import ShopTab from './ShopTab'
 import AchievementsTab from './AchievementsTab'
 import MissionsTab from './MissionsTab'
@@ -27,6 +28,7 @@ import {
 } from '@/lib/gameLogic'
 import { type Achievement, getNewAchievements } from '@/lib/achievements'
 import { playEnhanceStart, playSuccess, playMaintain, playDestroy, playCheckIn, playBuy, playAchievement, playClick } from '@/lib/sounds'
+import { WEAPONS } from '@/lib/weapons'
 import {
   type DailyMissionState,
   getInitialMissionState,
@@ -186,8 +188,11 @@ export default function Game() {
     }
 
     setState(prev => {
-      const newLevel = r === 'success' ? prev.level + 1 : r === 'destroy' ? 0 : prev.level
-      const entry = { from: prev.level, result: r, ts: Date.now(), usedProtection: wantProtect, usedBlessing: wantBless }
+      const curLevel = prev.weapons[prev.activeWeapon]?.level ?? prev.level
+      const newLevel = r === 'success' ? curLevel + 1 : r === 'destroy' ? 0 : curLevel
+      const entry = { from: curLevel, result: r, ts: Date.now(), usedProtection: wantProtect, usedBlessing: wantBless }
+      const wep = prev.weapons[prev.activeWeapon] ?? { level: 0, highestLevel: 0 }
+      const updatedWeapons = { ...prev.weapons, [prev.activeWeapon]: { level: newLevel, highestLevel: Math.max(wep.highestLevel, newLevel) } }
       const updated: GameState = {
         ...prev,
         level: newLevel,
@@ -200,6 +205,7 @@ export default function Game() {
         protectionScrolls: prev.protectionScrolls - (wantProtect ? 1 : 0),
         blessingScrolls: prev.blessingScrolls - (wantBless ? 1 : 0),
         enhanceLog: [entry, ...prev.enhanceLog.slice(0, MAX_LOG - 1)],
+        weapons: updatedWeapons,
       }
       return awardAchievements(updated)
     })
@@ -261,6 +267,32 @@ export default function Game() {
       return { ...prev, claimed: [...prev.claimed, missionId] }
     })
     setState(prev => ({ ...prev, gold: prev.gold + mission.reward }))
+  }, [])
+
+  const handleSelectWeapon = useCallback((weaponId: string) => {
+    setState(prev => {
+      if (!prev.weapons[weaponId]) return prev
+      const wep = prev.weapons[weaponId]
+      return { ...prev, activeWeapon: weaponId, level: wep.level }
+    })
+    setAutoMode(false)
+    if (soundRef.current) playClick()
+  }, [])
+
+  const handleUnlockWeapon = useCallback((weaponId: string) => {
+    const wDef = WEAPONS.find(w => w.id === weaponId)
+    if (!wDef) return
+    setState(prev => {
+      if (prev.gold < wDef.unlockCost || prev.weapons[weaponId]) return prev
+      return {
+        ...prev,
+        gold: prev.gold - wDef.unlockCost,
+        weapons: { ...prev.weapons, [weaponId]: { level: 0, highestLevel: 0 } },
+        activeWeapon: weaponId,
+        level: 0,
+      }
+    })
+    if (soundRef.current) playBuy()
   }, [])
 
   const handleReset = useCallback(() => {
@@ -327,6 +359,7 @@ export default function Game() {
               onEnhance={handleEnhance} onToggleAuto={() => setAutoMode(a => !a)}
               onToggleProtection={() => { setUseProtection(p => !p); if (soundEnabled) playClick() }}
               onToggleBlessing={() => { setUseBlessing(b => !b); if (soundEnabled) playClick() }}
+              onSelectWeapon={handleSelectWeapon} onUnlockWeapon={handleUnlockWeapon}
               onReset={handleReset}
             />
           )}
@@ -361,7 +394,7 @@ export default function Game() {
 function EnhanceContent({
   state, tier, rates, cost, canAfford, maxed, enhancing, result, autoMode,
   useProtection, useBlessing, particleType, showMagicCircle, levelBurst,
-  soundEnabled, onToggleSound,
+  soundEnabled, onToggleSound, onSelectWeapon, onUnlockWeapon,
   onEnhance, onToggleAuto, onToggleProtection, onToggleBlessing, onReset,
 }: {
   state: GameState; tier: { name: string; color: string }
@@ -373,13 +406,19 @@ function EnhanceContent({
   showMagicCircle: boolean; levelBurst: boolean
   soundEnabled: boolean; onToggleSound: () => void
   onEnhance: () => void; onToggleAuto: () => void
-  onToggleProtection: () => void; onToggleBlessing: () => void; onReset: () => void
+  onToggleProtection: () => void; onToggleBlessing: () => void
+  onSelectWeapon: (id: string) => void; onUnlockWeapon: (id: string) => void; onReset: () => void
 }) {
   const blessingBonus = useBlessing && state.blessingScrolls > 0 ? 10 : 0
   const effectiveSuccess = Math.min(99, rates.success + blessingBonus)
 
+  const weaponDef = WEAPONS.find(w => w.id === state.activeWeapon)
+
   return (
     <div className="flex flex-col items-center">
+      {/* Weapon selector */}
+      <WeaponSelect state={state} onSelect={onSelectWeapon} onUnlock={onUnlockWeapon} />
+
       <div className="py-4 relative">
         <Particles type={particleType} />
         <MagicCircle active={showMagicCircle} color={tier.color} />

@@ -6,6 +6,11 @@ export interface EnhanceLogEntry {
   usedBlessing: boolean
 }
 
+export interface WeaponData {
+  level: number
+  highestLevel: number
+}
+
 export interface GameState {
   level: number
   gold: number
@@ -20,6 +25,8 @@ export interface GameState {
   blessingScrolls: number
   achievements: string[]
   enhanceLog: EnhanceLogEntry[]
+  activeWeapon: string
+  weapons: Record<string, WeaponData>
 }
 
 export const INITIAL_STATE: GameState = {
@@ -36,6 +43,8 @@ export const INITIAL_STATE: GameState = {
   blessingScrolls: 0,
   achievements: [],
   enhanceLog: [],
+  activeWeapon: 'sword',
+  weapons: { sword: { level: 0, highestLevel: 0 } },
 }
 
 export const MAX_LEVEL = 30
