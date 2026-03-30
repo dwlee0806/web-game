@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import Link from 'next/link'
+import CookieConsent from '@/components/CookieConsent'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -70,20 +71,14 @@ export default function RootLayout({
       </head>
       <body className="bg-gray-950 antialiased">
         {children}
+        <CookieConsent />
         <footer className="bg-gray-950 border-t border-gray-800/40 py-4 text-center text-xs text-gray-600">
           <div className="flex justify-center gap-4">
-            <Link href="/" className="hover:text-gray-400 transition-colors">
-              홈
-            </Link>
-            <Link href="/guide" className="hover:text-gray-400 transition-colors">
-              확률표
-            </Link>
-            <Link href="/about" className="hover:text-gray-400 transition-colors">
-              소개
-            </Link>
-            <Link href="/privacy" className="hover:text-gray-400 transition-colors">
-              개인정보처리방침
-            </Link>
+            <Link href="/" className="hover:text-gray-400 transition-colors">홈</Link>
+            <Link href="/arena" className="hover:text-gray-400 transition-colors">전장</Link>
+            <Link href="/guide" className="hover:text-gray-400 transition-colors">확률표</Link>
+            <Link href="/about" className="hover:text-gray-400 transition-colors">소개</Link>
+            <Link href="/privacy" className="hover:text-gray-400 transition-colors">개인정보처리방침</Link>
           </div>
           <p className="mt-2">© 2026 검 강화 시뮬레이터</p>
         </footer>
