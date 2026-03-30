@@ -793,11 +793,17 @@ function EnhanceContent({
           </div>
         )}
 
-        {/* Arena CTA — prominent */}
-        <a href="/arena" className="block w-full py-3 rounded-xl bg-gradient-to-r from-red-700 via-red-600 to-orange-600 hover:from-red-600 hover:to-orange-500 font-bold text-center transition-all active:scale-[0.98] shadow-lg shadow-red-900/30">
-          <span className="text-base">🗡️ 전장으로!</span>
-          <span className="block text-[10px] text-red-200/70 mt-0.5">몬스터를 사냥하고 골드를 얻으세요</span>
-        </a>
+        {/* Battle CTAs */}
+        <div className="flex gap-2">
+          <a href="/arena" className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-700 to-orange-600 hover:from-red-600 hover:to-orange-500 font-bold text-center transition-all active:scale-[0.98] shadow-lg shadow-red-900/30">
+            <span className="text-sm">🗡️ 전장</span>
+            <span className="block text-[8px] text-red-200/60">몬스터 사냥</span>
+          </a>
+          <a href="/pvp" className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-violet-700 to-indigo-600 hover:from-violet-600 hover:to-indigo-500 font-bold text-center transition-all active:scale-[0.98] shadow-lg shadow-violet-900/30">
+            <span className="text-sm">⚔️ PvP</span>
+            <span className="block text-[8px] text-violet-200/60">1대1 대전</span>
+          </a>
+        </div>
       </div>
     </div>
   )
