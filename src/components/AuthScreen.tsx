@@ -115,9 +115,9 @@ export default function AuthScreen({ onAuth, onGuest }: AuthScreenProps) {
         {/* Guest play */}
         <button
           onClick={onGuest}
-          className="w-full mt-4 py-3 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+          className="w-full mt-4 py-3.5 rounded-xl border border-gray-700 bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium text-base transition-all active:scale-[0.98]"
         >
-          게스트로 플레이 →
+          🎮 바로 플레이하기
         </button>
 
         <p className="text-center text-[10px] text-gray-700 mt-6">
