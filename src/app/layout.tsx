@@ -44,6 +44,21 @@ export default function RootLayout({
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon.svg" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebApplication',
+              name: '검 강화 시뮬레이터',
+              description: '매일 출석체크로 골드를 모으고 검을 강화하는 무료 웹 게임',
+              applicationCategory: 'GameApplication',
+              operatingSystem: 'Any',
+              offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
+              inLanguage: 'ko',
+            }),
+          }}
+        />
       </head>
       <body className="bg-gray-950 antialiased">
         {children}
