@@ -15,15 +15,14 @@ export const metadata: Metadata = {
 }
 
 const RATES = [
-  { range: '+0 ~ +2', success: 95, maintain: 5, down: 0, destroy: 0, cost: 50, tier: '일반→고급' },
-  { range: '+3 ~ +4', success: 85, maintain: 15, down: 0, destroy: 0, cost: 100, tier: '고급' },
-  { range: '+5 ~ +6', success: 70, maintain: 20, down: 5, destroy: 5, cost: 300, tier: '고급→희귀' },
-  { range: '+7 ~ +9', success: 55, maintain: 25, down: 10, destroy: 10, cost: 600, tier: '희귀' },
-  { range: '+10 ~ +12', success: 40, maintain: 25, down: 15, destroy: 20, cost: 1500, tier: '영웅' },
-  { range: '+13 ~ +15', success: 25, maintain: 25, down: 20, destroy: 30, cost: 3000, tier: '영웅→전설' },
-  { range: '+16 ~ +19', success: 15, maintain: 20, down: 25, destroy: 40, cost: 8000, tier: '전설' },
-  { range: '+20 ~ +24', success: 7, maintain: 13, down: 20, destroy: 60, cost: 20000, tier: '신화' },
-  { range: '+25 ~ +29', success: 3, maintain: 7, down: 15, destroy: 75, cost: 50000, tier: '초월' },
+  { range: '+0 ~ +2', success: 95, maintain: 5, down: 0, destroy: 0, cost: 50, tier: '일반' },
+  { range: '+3 ~ +4', success: 80, maintain: 15, down: 5, destroy: 0, cost: 150, tier: '고급' },
+  { range: '+5 ~ +6', success: 65, maintain: 18, down: 10, destroy: 7, cost: 400, tier: '희귀' },
+  { range: '+7 ~ +8', success: 50, maintain: 20, down: 15, destroy: 15, cost: 1000, tier: '영웅' },
+  { range: '+9 ~ +10', success: 35, maintain: 20, down: 20, destroy: 25, cost: 2500, tier: '전설' },
+  { range: '+11 ~ +12', success: 20, maintain: 18, down: 22, destroy: 40, cost: 6000, tier: '신화' },
+  { range: '+13 ~ +14', success: 10, maintain: 15, down: 25, destroy: 50, cost: 15000, tier: '초월' },
+  { range: '+15 ~ +16', success: 5, maintain: 10, down: 15, destroy: 70, cost: 40000, tier: '태초' },
 ]
 
 export default function GuidePage() {

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="220" viewBox="0 0 120 220">
+  <defs>
+    <linearGradient id="blade-heroic" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFB300" stop-opacity="0.35"/>
+      <stop offset="20%" stop-color="#E8ECF0" stop-opacity="0.95"/>
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="55%" stop-color="#F0F4F8" stop-opacity="0.9"/>
+      <stop offset="75%" stop-color="#D0D8E0" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#FFB300" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="guard-heroic" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFB300"/>
+      <stop offset="30%" stop-color="#FFFBE6" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#FFB300"/>
+      <stop offset="100%" stop-color="#FFD54F" stop-opacity="0.7"/>
+    </linearGradient>
+    <radialGradient id="gem-heroic" cx="35%" cy="30%">
+      <stop offset="0%" stop-color="#FFF" stop-opacity="1"/>
+      <stop offset="30%" stop-color="#FFF" stop-opacity="0.5"/>
+      <stop offset="60%" stop-color="#FFB300"/>
+      <stop offset="100%" stop-color="#FFB300" stop-opacity="0.4"/>
+    </radialGradient>
+    <filter id="glow-heroic" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3.3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="rune-heroic"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <pattern id="leather-heroic" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#3D2415"/>
+      <line x1="0" y1="4" x2="8" y2="4" stroke="#5A3A20" stroke-width="1.5"/>
+    </pattern>
+  </defs>
+  <circle cx="60" cy="100" r="70" fill="none" stroke="#FFB300" stroke-width="0.6" opacity="0.15">
+    <animateTransform attributeName="transform" type="rotate" from="0 60 100" to="360 60 100" dur="18s" repeatCount="indefinite"/>
+  </circle>
+  <g filter="url(#glow-heroic)">
+    <polygon points="60,4 75,125 60,140 45,125" fill="url(#blade-heroic)" stroke="#FFB300" stroke-width="0.5" stroke-linejoin="round"/>
+    <line x1="60" y1="16" x2="60" y2="121" stroke="#FFB300" stroke-width="1.2" opacity="0.3"/>
+    <polygon points="60,4 65.25,43.75 60,56.25 58.2,31.25" fill="rgba(255,255,255,0.12)"/>
+    <line x1="47" y1="25" x2="45" y2="123" stroke="rgba(255,255,255,0.18)" stroke-width="0.5"/>
+    <line x1="73" y1="25" x2="75" y2="123" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    <polygon points="45,35 41,40 45,45" fill="#FFB300" opacity="0.3"/>
+    <polygon points="75,35 79,40 75,45" fill="#FFB300" opacity="0.3"/>
+    <polygon points="45,63 41,68 45,73" fill="#FFB300" opacity="0.3"/>
+    <polygon points="75,63 79,68 75,73" fill="#FFB300" opacity="0.3"/>
+    <polygon points="45,91 41,96 45,101" fill="#FFB300" opacity="0.3"/>
+    <polygon points="75,91 79,96 75,101" fill="#FFB300" opacity="0.3"/>
+    <text x="60" y="35" text-anchor="middle" font-size="8" fill="#FFD54F" font-family="serif" filter="url(#rune-heroic)" opacity="0.7">✦</text>
+    <text x="60" y="57" text-anchor="middle" font-size="8" fill="#FFD54F" font-family="serif" filter="url(#rune-heroic)" opacity="0.7">◈</text>
+    <text x="60" y="79" text-anchor="middle" font-size="8" fill="#FFD54F" font-family="serif" filter="url(#rune-heroic)" opacity="0.7">✦</text>
+  </g>
+  <rect x="15" y="137" width="90" height="12" rx="4" fill="url(#guard-heroic)" stroke="#FFB300" stroke-width="0.4"/>
+  <circle cx="22" cy="143" r="2.5" fill="#FFB300" opacity="0.8"><animate attributeName="opacity" values="0.8;0.4;0.8" dur="2.5s" repeatCount="indefinite"/></circle>
+  <circle cx="98" cy="143" r="2.5" fill="#FFB300" opacity="0.8"><animate attributeName="opacity" values="0.8;0.4;0.8" dur="2.5s" repeatCount="indefinite" begin="1.2s"/></circle>
+  <rect x="48" y="151" width="24" height="38" rx="2" fill="url(#leather-heroic)"/>
+  <line x1="50" y1="156" x2="70" y2="156" stroke="#8B6914" stroke-width="1" opacity="0.4"/>
+  <line x1="50" y1="163" x2="70" y2="163" stroke="#8B6914" stroke-width="1" opacity="0.4"/>
+  <line x1="50" y1="170" x2="70" y2="170" stroke="#8B6914" stroke-width="1" opacity="0.4"/>
+  <line x1="50" y1="177" x2="70" y2="177" stroke="#8B6914" stroke-width="1" opacity="0.4"/>
+  <line x1="50" y1="184" x2="70" y2="184" stroke="#8B6914" stroke-width="1" opacity="0.4"/>
+  <ellipse cx="60" cy="193" rx="12" ry="10" fill="url(#guard-heroic)" stroke="#FFB300" stroke-width="0.4"/>
+  <circle cx="60" cy="192" r="5" fill="url(#gem-heroic)"><animate attributeName="r" values="5;5.5;5" dur="3s" repeatCount="indefinite"/></circle>
+  <circle cx="58" cy="190" r="1.2" fill="white" opacity="0.8"><animate attributeName="opacity" values="0.8;0.3;0.8" dur="1.8s" repeatCount="indefinite"/></circle>
+  <circle cx="30" cy="20" r="1.5" fill="#FFD54F" opacity="0"><animate attributeName="opacity" values="0;0.6;0" dur="2s" repeatCount="indefinite" begin="0s"/><animate attributeName="cy" values="20;5" dur="2s" repeatCount="indefinite" begin="0s"/></circle>
+  <circle cx="50" cy="45" r="1.5" fill="#FFD54F" opacity="0"><animate attributeName="opacity" values="0;0.6;0" dur="2.5s" repeatCount="indefinite" begin="0.7s"/><animate attributeName="cy" values="45;30" dur="2.5s" repeatCount="indefinite" begin="0.7s"/></circle>
+  <circle cx="70" cy="70" r="1.5" fill="#FFD54F" opacity="0"><animate attributeName="opacity" values="0;0.6;0" dur="3s" repeatCount="indefinite" begin="1.4s"/><animate attributeName="cy" values="70;55" dur="3s" repeatCount="indefinite" begin="1.4s"/></circle>
+  <circle cx="90" cy="95" r="1.5" fill="#FFD54F" opacity="0"><animate attributeName="opacity" values="0;0.6;0" dur="3.5s" repeatCount="indefinite" begin="2.0999999999999996s"/><animate attributeName="cy" values="95;80" dur="3.5s" repeatCount="indefinite" begin="2.0999999999999996s"/></circle>
+</svg>

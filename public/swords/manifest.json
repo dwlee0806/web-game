@@ -1,0 +1,91 @@
+[
+  {
+    "id": "normal",
+    "name": "일반",
+    "levels": [
+      0,
+      1,
+      2
+    ],
+    "color": "#9EAFC0",
+    "accent": "#B0BEC5",
+    "file": "sword_normal.svg"
+  },
+  {
+    "id": "advanced",
+    "name": "고급",
+    "levels": [
+      3,
+      4
+    ],
+    "color": "#4FC3F7",
+    "accent": "#81D4FA",
+    "file": "sword_advanced.svg"
+  },
+  {
+    "id": "rare",
+    "name": "희귀",
+    "levels": [
+      5,
+      6
+    ],
+    "color": "#AB47BC",
+    "accent": "#CE93D8",
+    "file": "sword_rare.svg"
+  },
+  {
+    "id": "heroic",
+    "name": "영웅",
+    "levels": [
+      7,
+      8
+    ],
+    "color": "#FFB300",
+    "accent": "#FFD54F",
+    "file": "sword_heroic.svg"
+  },
+  {
+    "id": "legendary",
+    "name": "전설",
+    "levels": [
+      9,
+      10
+    ],
+    "color": "#FF7043",
+    "accent": "#FFAB91",
+    "file": "sword_legendary.svg"
+  },
+  {
+    "id": "mythic",
+    "name": "신화",
+    "levels": [
+      11,
+      12
+    ],
+    "color": "#EF5350",
+    "accent": "#EF9A9A",
+    "file": "sword_mythic.svg"
+  },
+  {
+    "id": "transcend",
+    "name": "초월",
+    "levels": [
+      13,
+      14
+    ],
+    "color": "#EC407A",
+    "accent": "#F48FB1",
+    "file": "sword_transcend.svg"
+  },
+  {
+    "id": "genesis",
+    "name": "태초",
+    "levels": [
+      15,
+      16
+    ],
+    "color": "#FFD700",
+    "accent": "#FFF9C4",
+    "file": "sword_genesis.svg"
+  }
+]

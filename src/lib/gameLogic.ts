@@ -75,34 +75,32 @@ export function rollSpecialSkin(discoveredSkins: string[]): string | null {
   return available[Math.floor(Math.random() * available.length)]
 }
 
-export const MAX_LEVEL = 30
+export const MAX_LEVEL = 16
 export const MAX_LOG = 20
 
 export type EnhanceResult = 'success' | 'maintain' | 'destroy' | 'downgrade'
 
 export function getEnhanceRates(level: number) {
-  // downgrade = level -1 (instead of full destroy)
-  if (level < 3) return { success: 95, maintain: 5, downgrade: 0, destroy: 0 }
-  if (level < 5) return { success: 85, maintain: 15, downgrade: 0, destroy: 0 }
-  if (level < 7) return { success: 70, maintain: 20, downgrade: 5, destroy: 5 }
-  if (level < 10) return { success: 55, maintain: 25, downgrade: 10, destroy: 10 }
-  if (level < 13) return { success: 40, maintain: 25, downgrade: 15, destroy: 20 }
-  if (level < 16) return { success: 25, maintain: 25, downgrade: 20, destroy: 30 }
-  if (level < 20) return { success: 15, maintain: 20, downgrade: 25, destroy: 40 }
-  if (level < 25) return { success: 7, maintain: 13, downgrade: 20, destroy: 60 }
-  return { success: 3, maintain: 7, downgrade: 15, destroy: 75 }
+  // +0~+16 system, 2 levels per tier
+  if (level < 3) return { success: 95, maintain: 5, downgrade: 0, destroy: 0 }   // 일반 +0~2
+  if (level < 5) return { success: 80, maintain: 15, downgrade: 5, destroy: 0 }   // 고급 +3~4
+  if (level < 7) return { success: 65, maintain: 18, downgrade: 10, destroy: 7 }  // 희귀 +5~6
+  if (level < 9) return { success: 50, maintain: 20, downgrade: 15, destroy: 15 } // 영웅 +7~8
+  if (level < 11) return { success: 35, maintain: 20, downgrade: 20, destroy: 25 } // 전설 +9~10
+  if (level < 13) return { success: 20, maintain: 18, downgrade: 22, destroy: 40 } // 신화 +11~12
+  if (level < 15) return { success: 10, maintain: 15, downgrade: 25, destroy: 50 } // 초월 +13~14
+  return { success: 5, maintain: 10, downgrade: 15, destroy: 70 }                  // 태초 +15~16
 }
 
 export function getEnhanceCost(level: number): number {
-  if (level < 3) return 50
-  if (level < 5) return 100
-  if (level < 7) return 300
-  if (level < 10) return 600
-  if (level < 13) return 1500
-  if (level < 16) return 3000
-  if (level < 20) return 8000
-  if (level < 25) return 20000
-  return 50000
+  if (level < 3) return 50      // 일반
+  if (level < 5) return 150     // 고급
+  if (level < 7) return 400     // 희귀
+  if (level < 9) return 1000    // 영웅
+  if (level < 11) return 2500   // 전설
+  if (level < 13) return 6000   // 신화
+  if (level < 15) return 15000  // 초월
+  return 40000                   // 태초
 }
 
 export function rollEnhance(level: number, useBlessing: boolean, failStack: number = 0): EnhanceResult {
@@ -144,14 +142,14 @@ export function isStreakContinued(lastCheckIn: string | null): boolean {
 }
 
 export function getLevelTier(level: number) {
-  if (level === 0) return { name: '일반', color: '#9CA3AF' }
-  if (level < 5) return { name: '고급', color: '#60A5FA' }
-  if (level < 10) return { name: '희귀', color: '#A78BFA' }
-  if (level < 15) return { name: '영웅', color: '#FBBF24' }
-  if (level < 20) return { name: '전설', color: '#F97316' }
-  if (level < 25) return { name: '신화', color: '#EF4444' }
-  if (level < 30) return { name: '초월', color: '#EC4899' }
-  return { name: '태초', color: '#FFD700' }
+  if (level < 3) return { name: '일반', color: '#9EAFC0', id: 'normal' }
+  if (level < 5) return { name: '고급', color: '#4FC3F7', id: 'advanced' }
+  if (level < 7) return { name: '희귀', color: '#AB47BC', id: 'rare' }
+  if (level < 9) return { name: '영웅', color: '#FFB300', id: 'heroic' }
+  if (level < 11) return { name: '전설', color: '#FF7043', id: 'legendary' }
+  if (level < 13) return { name: '신화', color: '#EF5350', id: 'mythic' }
+  if (level < 15) return { name: '초월', color: '#EC407A', id: 'transcend' }
+  return { name: '태초', color: '#FFD700', id: 'genesis' }
 }
 
 export const SHOP = {
@@ -171,11 +169,11 @@ export function getPrestigeReward(highestLevel: number, currentPrestige: number)
 }
 
 export function canPrestige(highestLevel: number): boolean {
-  return highestLevel >= 10 // Need at least +10 to prestige
+  return highestLevel >= 7 // Need at least +7 (영웅) to prestige
 }
 
 export function getPrestigePoints(highestLevel: number): number {
-  return Math.floor(highestLevel / 5)
+  return Math.floor(highestLevel / 2)
 }
 
 // Offline gold: based on time away and prestige level

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="220" viewBox="0 0 120 220">
+  <defs>
+    <linearGradient id="blade-normal" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9EAFC0" stop-opacity="0.35"/>
+      <stop offset="20%" stop-color="#E8ECF0" stop-opacity="0.95"/>
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="55%" stop-color="#F0F4F8" stop-opacity="0.9"/>
+      <stop offset="75%" stop-color="#D0D8E0" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#9EAFC0" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="guard-normal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9EAFC0"/>
+      <stop offset="30%" stop-color="#FFFBE6" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#9EAFC0"/>
+      <stop offset="100%" stop-color="#B0BEC5" stop-opacity="0.7"/>
+    </linearGradient>
+    <radialGradient id="gem-normal" cx="35%" cy="30%">
+      <stop offset="0%" stop-color="#FFF" stop-opacity="1"/>
+      <stop offset="30%" stop-color="#FFF" stop-opacity="0.5"/>
+      <stop offset="60%" stop-color="#B0BEC5"/>
+      <stop offset="100%" stop-color="#B0BEC5" stop-opacity="0.4"/>
+    </radialGradient>
+    <pattern id="leather-normal" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#3D2415"/>
+      <line x1="0" y1="4" x2="8" y2="4" stroke="#5A3A20" stroke-width="1.5"/>
+    </pattern>
+  </defs>
+  <g >
+    <polygon points="60,4 72,120 60,135 48,120" fill="url(#blade-normal)" stroke="#9EAFC0" stroke-width="0.5" stroke-linejoin="round"/>
+    <line x1="60" y1="16" x2="60" y2="116" stroke="#9EAFC0" stroke-width="1.2" opacity="0.3"/>
+    <polygon points="60,4 64.2,42 60,54 58.56,30" fill="rgba(255,255,255,0.12)"/>
+    <line x1="50" y1="25" x2="48" y2="118" stroke="rgba(255,255,255,0.18)" stroke-width="0.5"/>
+    <line x1="70" y1="25" x2="72" y2="118" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+  </g>
+  <rect x="20" y="132" width="80" height="10" rx="3" fill="url(#guard-normal)" stroke="#DAA520" stroke-width="0.4"/>
+  <rect x="48" y="144" width="24" height="38" rx="2" fill="url(#leather-normal)"/>
+  <line x1="50" y1="149" x2="70" y2="149" stroke="#8B6914" stroke-width="1" opacity="0.4"/>
+  <line x1="50" y1="156" x2="70" y2="156" stroke="#8B6914" stroke-width="1" opacity="0.4"/>
+  <line x1="50" y1="163" x2="70" y2="163" stroke="#8B6914" stroke-width="1" opacity="0.4"/>
+  <line x1="50" y1="170" x2="70" y2="170" stroke="#8B6914" stroke-width="1" opacity="0.4"/>
+  <line x1="50" y1="177" x2="70" y2="177" stroke="#8B6914" stroke-width="1" opacity="0.4"/>
+  <ellipse cx="60" cy="186" rx="12" ry="10" fill="url(#guard-normal)" stroke="#9EAFC0" stroke-width="0.4"/>
+  <circle cx="60" cy="185" r="5" fill="url(#gem-normal)"><animate attributeName="r" values="5;5.5;5" dur="3s" repeatCount="indefinite"/></circle>
+  <circle cx="58" cy="183" r="1.2" fill="white" opacity="0.8"><animate attributeName="opacity" values="0.8;0.3;0.8" dur="1.8s" repeatCount="indefinite"/></circle>
+</svg>

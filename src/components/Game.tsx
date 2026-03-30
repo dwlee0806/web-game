@@ -701,7 +701,7 @@ function EnhanceContent({
           <div className="text-xs font-bold tracking-[0.2em] text-glow-sm" style={{ color: tier.color }}>{tier.name}</div>
           {/* Progress bar inline */}
           <div className="mt-1.5 h-1.5 w-28 bg-gray-800 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${(state.level / 30) * 100}%`, background: `linear-gradient(90deg, ${tier.color}80, ${tier.color})` }} />
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${(state.level / 16) * 100}%`, background: `linear-gradient(90deg, ${tier.color}80, ${tier.color})` }} />
           </div>
           {result && (
             <div className={`mt-1 text-sm font-black animate-result-in text-glow ${result === 'success' ? 'text-yellow-400' : result === 'downgrade' ? 'text-orange-400' : result === 'maintain' ? 'text-blue-400' : 'text-red-500'}`}>
