@@ -147,7 +147,7 @@ export default function Game() {
     const ids = fresh.map(a => a.id)
     const bonus = fresh.reduce((sum, a) => sum + a.reward, 0)
     setAchPopup(fresh[0])
-    playAchievement()
+    if (soundRef.current) playAchievement()
     setTimeout(() => setAchPopup(null), 2500)
     return { ...s, achievements: [...s.achievements, ...ids], gold: s.gold + bonus }
   }, [])
@@ -167,37 +167,42 @@ export default function Game() {
 
   const doEnhance = useCallback(() => {
     const s = stateRef.current
-    if (s.level >= MAX_LEVEL) return
-    const cost = getEnhanceCost(s.level)
+    // Bug fix: use weapon level, not state.level (which may be stale after weapon switch)
+    const weaponLevel = s.weapons[s.activeWeapon]?.level ?? s.level
+    if (weaponLevel >= MAX_LEVEL) return
+    const cost = getEnhanceCost(weaponLevel)
     if (s.gold < cost) { setAutoMode(false); return }
 
     const wantProtect = useProtection && s.protectionScrolls > 0
     const wantBless = useBlessing && s.blessingScrolls > 0
 
-    let r = rollEnhance(s.level, wantBless, s.failStack)
-    if (r === 'destroy' && wantProtect) r = 'maintain'
+    const rawResult = rollEnhance(weaponLevel, wantBless, s.failStack)
+    const wasDestroyed = rawResult === 'destroy'
+    const r = wasDestroyed && wantProtect ? 'maintain' : rawResult
 
     setResult(r)
     if (soundRef.current) {
       if (r === 'success') playSuccess()
+      else if (wasDestroyed) playDestroy() // Play destroy sound even if protected
       else if (r === 'maintain') playMaintain()
-      else playDestroy()
     }
     if (r === 'success') {
       setParticleType('success')
       setLevelBurst(true)
       setTimeout(() => { setParticleType(null); setLevelBurst(false) }, 1500)
-    } else if (r === 'destroy') {
+    } else if (wasDestroyed && !wantProtect) {
       setParticleType('destroy')
       setTimeout(() => setParticleType(null), 1500)
     }
 
     setState(prev => {
       const curLevel = prev.weapons[prev.activeWeapon]?.level ?? prev.level
-      const newLevel = r === 'success' ? curLevel + 1 : r === 'destroy' ? 0 : curLevel
+      const newLevel = r === 'success' ? curLevel + 1 : rawResult === 'destroy' && !wantProtect ? 0 : curLevel
       const entry = { from: curLevel, result: r, ts: Date.now(), usedProtection: wantProtect, usedBlessing: wantBless }
       const wep = prev.weapons[prev.activeWeapon] ?? { level: 0, highestLevel: 0 }
       const updatedWeapons = { ...prev.weapons, [prev.activeWeapon]: { level: newLevel, highestLevel: Math.max(wep.highestLevel, newLevel) } }
+      // Bug fix: count actual destroy (not protected maintain)
+      const actualDestroy = wasDestroyed && !wantProtect
       const updated: GameState = {
         ...prev,
         level: newLevel,
@@ -205,7 +210,7 @@ export default function Game() {
         totalAttempts: prev.totalAttempts + 1,
         totalSuccess: prev.totalSuccess + (r === 'success' ? 1 : 0),
         totalMaintain: prev.totalMaintain + (r === 'maintain' ? 1 : 0),
-        totalDestroy: prev.totalDestroy + (r === 'destroy' ? 1 : 0),
+        totalDestroy: prev.totalDestroy + (actualDestroy ? 1 : 0),
         highestLevel: Math.max(prev.highestLevel, newLevel),
         protectionScrolls: prev.protectionScrolls - (wantProtect ? 1 : 0),
         blessingScrolls: prev.blessingScrolls - (wantBless ? 1 : 0),
@@ -220,7 +225,8 @@ export default function Game() {
     // Mission progress
     progressMission(['enhance5', 'enhance15', 'enhance30'])
     if (r === 'success') progressMission(['success3', 'success10'])
-    if (r === 'destroy') {
+    // Bug fix: survive5 should only reset on actual destroy (not protected)
+    if (wasDestroyed && !wantProtect) {
       resetMissionProgress('survive5')
     } else {
       progressMission(['survive5'])
@@ -228,8 +234,7 @@ export default function Game() {
     if (wantProtect) progressMission(['useprotect'])
     if (wantBless) progressMission(['usebless'])
 
-    // Reach missions — need to check after state update
-    const newLevel = r === 'success' ? s.level + 1 : r === 'destroy' ? 0 : s.level
+    const newLevel = r === 'success' ? weaponLevel + 1 : (wasDestroyed && !wantProtect) ? 0 : weaponLevel
     setMissionLevel('reach5', newLevel)
     setMissionLevel('reach10', newLevel)
   }, [useProtection, useBlessing, awardAchievements, progressMission, resetMissionProgress, setMissionLevel])
@@ -250,7 +255,8 @@ export default function Game() {
   useEffect(() => {
     if (!autoMode || !mounted || enhancing) return
     const s = stateRef.current
-    if (s.level >= MAX_LEVEL || s.gold < getEnhanceCost(s.level)) { setAutoMode(false); return }
+    const wLv = s.weapons[s.activeWeapon]?.level ?? s.level
+    if (wLv >= MAX_LEVEL || s.gold < getEnhanceCost(wLv)) { setAutoMode(false); return }
     const t = setTimeout(handleEnhance, 150)
     return () => clearTimeout(t)
   }, [autoMode, enhancing, mounted, state, handleEnhance])
@@ -306,6 +312,8 @@ export default function Game() {
     if (confirm('정말 초기화하시겠습니까? 모든 데이터가 삭제됩니다.')) {
       setAutoMode(false)
       setState(INITIAL_STATE)
+      const today = new Date().toISOString().split('T')[0]
+      setMissions(getInitialMissionState(today))
     }
   }, [])
 

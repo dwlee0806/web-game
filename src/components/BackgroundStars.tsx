@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 
 interface Star {
   id: number
@@ -12,7 +12,7 @@ interface Star {
   delay: number
 }
 
-export default function BackgroundStars({ level, color }: { level: number; color: string }) {
+export default memo(function BackgroundStars({ level, color }: { level: number; color: string }) {
   const count = Math.min(5 + level * 2, 40)
 
   const stars = useMemo(() => {
@@ -54,4 +54,4 @@ export default function BackgroundStars({ level, color }: { level: number; color
       ))}
     </div>
   )
-}
+})
