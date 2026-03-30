@@ -259,3 +259,33 @@ html {
 .animate-npc-walk-left { animation: npc-walk-left linear infinite; }
 .animate-npc-bounce { animation: npc-bounce ease-in-out infinite; }
 .animate-cloud { animation: cloud-drift linear infinite; }
+
+/* ── Enhance gauge ── */
+
+@keyframes gauge-sweep {
+  0% { left: 0%; }
+  20% { left: 65%; }
+  40% { left: 30%; }
+  55% { left: 80%; }
+  70% { left: 45%; }
+  85% { left: 70%; }
+  95% { left: 55%; }
+  100% { left: var(--gauge-final, 50%); }
+}
+
+.animate-gauge-sweep { animation: gauge-sweep 0.7s ease-out forwards; }
+
+/* ── Sword shatter (destroy) ── */
+
+@keyframes sword-shatter-left {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(-30px, 40px) rotate(-25deg); opacity: 0; }
+}
+
+@keyframes sword-shatter-right {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(30px, 40px) rotate(25deg); opacity: 0; }
+}
+
+.animate-shatter-left { animation: sword-shatter-left 0.6s ease-in forwards; }
+.animate-shatter-right { animation: sword-shatter-right 0.6s ease-in forwards; }

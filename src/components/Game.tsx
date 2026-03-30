@@ -14,6 +14,7 @@ import StatsTab from './StatsTab'
 import Tutorial from './Tutorial'
 import BackgroundStars from './BackgroundStars'
 import SwordEffects from './SwordEffects'
+import EnhanceGauge from './EnhanceGauge'
 import AuthScreen from './AuthScreen'
 import { getCurrentUser, logout, getUserSaveKey, getUserMissionKey } from '@/lib/auth'
 import {
@@ -120,6 +121,9 @@ export default function Game() {
   const [showTutorial, setShowTutorial] = useState(false)
   const [offlineReward, setOfflineReward] = useState<{ gold: number; minutes: number } | null>(null)
   const [locale, setLocale] = useState<Locale>('ko')
+  const [gaugeActive, setGaugeActive] = useState(false)
+  const [gaugeProgress, setGaugeProgress] = useState(0)
+  const [shattered, setShattered] = useState(false)
 
   const stateRef = useRef(state)
   stateRef.current = state
@@ -243,6 +247,20 @@ export default function Game() {
     const r: EnhanceResult = wasDestroyed && wantProtect ? 'maintain' : rawResult
 
     setResult(r)
+    // Gauge final position: success = within success zone, fail = outside
+    const rates = getEnhanceRates(weaponLevel)
+    if (r === 'success') {
+      setGaugeProgress(Math.random() * rates.success * 0.01)
+    } else {
+      // Near-miss: land just outside success boundary for drama
+      const nearMiss = Math.random() < 0.3
+      setGaugeProgress(nearMiss ? (rates.success + 2 + Math.random() * 5) * 0.01 : (rates.success + 10 + Math.random() * 40) * 0.01)
+    }
+    // Shatter on actual destroy
+    if (wasDestroyed && !wantProtect) {
+      setShattered(true)
+      setTimeout(() => setShattered(false), 1500)
+    }
     if (soundRef.current) {
       if (r === 'success') playSuccess()
       else if (wasDestroyed) playDestroy()
@@ -323,13 +341,21 @@ export default function Game() {
     if (enhancing) return
     setEnhancing(true)
     setResult(null)
-    setShowMagicCircle(!autoRef.current)
-    if (soundRef.current && !autoRef.current) playEnhanceStart()
+    setShattered(false)
+    const isAuto = autoRef.current
+    setShowMagicCircle(!isAuto)
+    if (!isAuto) { setGaugeActive(true); setGaugeProgress(0) }
+    if (soundRef.current && !isAuto) playEnhanceStart()
     setTimeout(() => {
       setShowMagicCircle(false)
       doEnhance()
-      setTimeout(() => { setEnhancing(false); setResult(null) }, autoRef.current ? 400 : 1200)
-    }, autoRef.current ? 150 : 700)
+      // Set gauge final position based on result
+      setTimeout(() => {
+        setGaugeActive(false)
+        setEnhancing(false)
+        setResult(null)
+      }, isAuto ? 400 : 1400)
+    }, isAuto ? 150 : 800)
   }, [enhancing, doEnhance])
 
   useEffect(() => {
@@ -544,6 +570,7 @@ export default function Game() {
             useProtection={useProtection} useBlessing={useBlessing} particleType={particleType}
             showMagicCircle={showMagicCircle} levelBurst={levelBurst}
             soundEnabled={soundEnabled} onToggleSound={() => setSoundEnabled(s => !s)}
+            gaugeActive={gaugeActive} gaugeProgress={gaugeProgress} shattered={shattered}
             onEnhance={handleEnhance} onToggleAuto={() => setAutoMode(a => !a)}
             onToggleProtection={() => { setUseProtection(p => !p); if (soundEnabled) playClick() }}
             onToggleBlessing={() => { setUseBlessing(b => !b); if (soundEnabled) playClick() }}
@@ -619,7 +646,8 @@ export default function Game() {
 function EnhanceContent({
   state, tier, rates, cost, canAfford, maxed, enhancing, result, autoMode,
   useProtection, useBlessing, particleType, showMagicCircle, levelBurst,
-  soundEnabled, onToggleSound, onSelectWeapon, onUnlockWeapon,
+  soundEnabled, onToggleSound, gaugeActive, gaugeProgress, shattered,
+  onSelectWeapon, onUnlockWeapon,
   onEnhance, onToggleAuto, onToggleProtection, onToggleBlessing, onReset,
 }: {
   state: GameState; tier: { name: string; color: string }
@@ -630,9 +658,10 @@ function EnhanceContent({
   particleType: 'success' | 'destroy' | null
   showMagicCircle: boolean; levelBurst: boolean
   soundEnabled: boolean; onToggleSound: () => void
+  gaugeActive: boolean; gaugeProgress: number; shattered: boolean
+  onSelectWeapon: (id: string) => void; onUnlockWeapon: (id: string) => void
   onEnhance: () => void; onToggleAuto: () => void
-  onToggleProtection: () => void; onToggleBlessing: () => void
-  onSelectWeapon: (id: string) => void; onUnlockWeapon: (id: string) => void; onReset: () => void
+  onToggleProtection: () => void; onToggleBlessing: () => void; onReset: () => void
 }) {
   const blessingBonus = useBlessing && state.blessingScrolls > 0 ? 10 : 0
   const stackBonus = getFailStackBonus(state.failStack)
@@ -652,9 +681,20 @@ function EnhanceContent({
         <SwordEffects level={state.level} color={tier.color} result={result} />
         {levelBurst && <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full animate-level-burst" style={{ border: `2px solid ${tier.color}`, boxShadow: `0 0 20px ${tier.color}` }} />}
 
-        <div className={`shrink-0 ${enhancing && !result ? 'animate-enhance' : ''} ${result === 'destroy' ? 'animate-shake' : ''} ${!enhancing && state.level > 0 ? 'animate-sword-breathe' : ''}`} style={{ transform: 'scale(0.65)', transformOrigin: 'center' }}>
+        <div className={`shrink-0 ${enhancing && !result ? 'animate-enhance' : ''} ${result === 'destroy' ? 'animate-shake' : ''} ${!enhancing && state.level > 0 ? 'animate-sword-breathe' : ''} ${shattered ? 'opacity-0' : ''}`} style={{ transform: 'scale(0.65)', transformOrigin: 'center', transition: 'opacity 0.3s' }}>
           <Sword level={state.level} color={tier.color} weaponType={state.activeWeapon} specialSkin={state.specialSkin} />
         </div>
+        {/* Shatter fragments */}
+        {shattered && (
+          <div className="shrink-0 relative" style={{ width: 78, height: 143 }}>
+            <div className="absolute inset-0 animate-shatter-left" style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }}>
+              <div style={{ transform: 'scale(0.65)', transformOrigin: 'center' }}><Sword level={0} color="#666" /></div>
+            </div>
+            <div className="absolute inset-0 animate-shatter-right" style={{ clipPath: 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)' }}>
+              <div style={{ transform: 'scale(0.65)', transformOrigin: 'center' }}><Sword level={0} color="#666" /></div>
+            </div>
+          </div>
+        )}
 
         <div className="text-center min-w-0">
           <div className={`text-4xl font-black text-glow ${result === 'success' ? 'animate-pop' : ''}`} style={{ color: tier.color }}>+{state.level}</div>
@@ -675,13 +715,20 @@ function EnhanceContent({
       <div className="w-full space-y-2 mt-1">
         {!maxed ? (
           <>
-            {/* Rates (compact) */}
+            {/* Rates (compact) + sunk cost display */}
             <div className="glass-card rounded-xl p-3">
-              <div className="flex justify-between text-xs mb-1.5 text-gray-400">
+              <div className="flex justify-between text-xs mb-0.5 text-gray-400">
                 <span>+{state.level} → +{state.level + 1}</span>
                 <span className="text-yellow-400 font-medium">{cost.toLocaleString()}G</span>
                 {state.failStack > 0 && <span className="text-orange-400">🔥{state.failStack}</span>}
               </div>
+              {/* Sunk cost: sword value */}
+              {state.level >= 3 && (
+                <div className="text-[9px] text-gray-500 mb-1.5">
+                  💎 검 가치: <span className="text-yellow-400/80 font-medium">{Math.floor(state.level * state.level * 50).toLocaleString()}G</span>
+                  {' '}· 파괴 시 전액 손실
+                </div>
+              )}
               <div className="flex gap-1">
                 <RateBox label="성공" value={effectiveSuccess} boosted={totalBonus > 0} variant="emerald" />
                 <RateBox label="유지" value={rates.maintain} variant="blue" />
@@ -695,6 +742,9 @@ function EnhanceContent({
               <ItemToggle icon="🛡️" label="보호" count={state.protectionScrolls} active={useProtection && state.protectionScrolls > 0} disabled={state.protectionScrolls === 0} onToggle={onToggleProtection} />
               <ItemToggle icon="✨" label="축복" count={state.blessingScrolls} active={useBlessing && state.blessingScrolls > 0} disabled={state.blessingScrolls === 0} onToggle={onToggleBlessing} />
             </div>
+
+            {/* Enhance gauge (shown during enhance) */}
+            <EnhanceGauge active={gaugeActive} progress={gaugeProgress} result={result} successRate={effectiveSuccess} />
 
             <button onClick={onEnhance} disabled={enhancing || !canAfford || autoMode} className={`w-full py-3.5 rounded-xl font-bold text-lg transition-all ${enhancing || autoMode ? 'bg-amber-700/40 cursor-wait' : canAfford ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 active:scale-[0.98] shadow-lg shadow-orange-900/40' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}`}>
               {enhancing ? '🔮 강화 중…' : canAfford ? '🔥 강화하기' : '💰 골드 부족'}
