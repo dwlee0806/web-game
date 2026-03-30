@@ -275,6 +275,39 @@ html {
 
 .animate-gauge-sweep { animation: gauge-sweep 0.7s ease-out forwards; }
 
+/* ── Achievement celebration ── */
+
+@keyframes ach-popup {
+  0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+  15% { transform: scale(1.15) rotate(2deg); opacity: 1; }
+  25% { transform: scale(1) rotate(0deg); }
+  75% { transform: scale(1) rotate(0deg); opacity: 1; }
+  100% { transform: scale(0.8) rotate(0deg); opacity: 0; }
+}
+
+@keyframes ach-burst {
+  0% { transform: translate(-50%, 0) scale(0); opacity: 1; }
+  40% { transform: translate(-50%, 0) scale(1.5); opacity: 0.6; }
+  100% { transform: translate(-50%, 0) scale(2.5); opacity: 0; }
+}
+
+@keyframes ach-confetti {
+  0% { transform: translate(-50%, 0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--confetti-x, 0px)), var(--confetti-y, 60px)) rotate(var(--confetti-r, 360deg)) scale(0); opacity: 0; }
+}
+
+@keyframes ach-icon-bounce {
+  0%, 100% { transform: scale(1); }
+  20% { transform: scale(1.4); }
+  40% { transform: scale(0.9); }
+  60% { transform: scale(1.1); }
+}
+
+.animate-ach-popup { animation: ach-popup 2.5s ease-out forwards; }
+.animate-ach-burst { animation: ach-burst 1s ease-out forwards; }
+.animate-ach-confetti { animation: ach-confetti 1.2s ease-out forwards; }
+.animate-ach-icon-bounce { animation: ach-icon-bounce 0.6s ease-out; }
+
 /* ── Sword shatter (destroy) ── */
 
 @keyframes sword-shatter-left {

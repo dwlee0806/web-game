@@ -502,13 +502,32 @@ export default function Game() {
       {result === 'success' && <div className="fixed inset-0 pointer-events-none z-50 animate-flash-gold" />}
 
       {achPopup && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[60] bg-yellow-900/90 backdrop-blur border border-yellow-600/50 rounded-2xl px-5 py-3 animate-result-in shadow-xl">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{achPopup.icon}</span>
-            <div>
-              <div className="font-bold text-yellow-300 text-sm">업적 달성!</div>
-              <div className="text-white text-sm">{achPopup.name}</div>
-              <div className="text-yellow-400 text-xs font-bold">+{achPopup.reward.toLocaleString()}G</div>
+        <div className="fixed inset-0 z-[60] pointer-events-none flex items-start justify-center pt-16">
+          {/* Burst rays */}
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 w-60 h-60 animate-ach-burst" style={{ background: `radial-gradient(circle, ${achPopup.icon === '👑' ? '#FFD700' : '#F59E0B'}30 0%, transparent 60%)` }} />
+          {/* Confetti particles */}
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="absolute animate-ach-confetti" style={{
+              top: '10%', left: '50%',
+              width: 4 + Math.random() * 4, height: 4 + Math.random() * 4,
+              backgroundColor: ['#FFD700', '#EF4444', '#4ADE80', '#60A5FA', '#EC4899', '#A78BFA', '#F59E0B', '#10B981'][i],
+              borderRadius: i % 2 === 0 ? '50%' : '2px',
+              animationDelay: `${i * 0.08}s`,
+              '--confetti-x': `${(Math.random() - 0.5) * 200}px`,
+              '--confetti-y': `${40 + Math.random() * 80}px`,
+              '--confetti-r': `${Math.random() * 720 - 360}deg`,
+            } as React.CSSProperties} />
+          ))}
+          {/* Card */}
+          <div className="relative animate-ach-popup" style={{ animationDuration: '2.5s' }}>
+            <div className="bg-gradient-to-b from-yellow-900/95 to-amber-950/95 backdrop-blur-lg border border-yellow-500/40 rounded-2xl px-6 py-4 shadow-2xl shadow-yellow-900/50">
+              <div className="text-center">
+                <div className="text-4xl mb-1 animate-ach-icon-bounce">{achPopup.icon}</div>
+                <div className="text-yellow-300 font-black text-xs tracking-widest uppercase mb-0.5">Achievement</div>
+                <div className="text-white font-bold text-base">{achPopup.name}</div>
+                <div className="text-yellow-400/80 text-xs mt-0.5">{achPopup.desc}</div>
+                <div className="text-yellow-400 font-black text-lg mt-1">+{achPopup.reward.toLocaleString()}G</div>
+              </div>
             </div>
           </div>
         </div>
