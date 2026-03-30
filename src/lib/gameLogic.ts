@@ -1,3 +1,11 @@
+export interface EnhanceLogEntry {
+  from: number
+  result: EnhanceResult
+  ts: number
+  usedProtection: boolean
+  usedBlessing: boolean
+}
+
 export interface GameState {
   level: number
   gold: number
@@ -8,6 +16,10 @@ export interface GameState {
   highestLevel: number
   lastCheckIn: string | null
   checkInStreak: number
+  protectionScrolls: number
+  blessingScrolls: number
+  achievements: string[]
+  enhanceLog: EnhanceLogEntry[]
 }
 
 export const INITIAL_STATE: GameState = {
@@ -20,9 +32,14 @@ export const INITIAL_STATE: GameState = {
   highestLevel: 0,
   lastCheckIn: null,
   checkInStreak: 0,
+  protectionScrolls: 0,
+  blessingScrolls: 0,
+  achievements: [],
+  enhanceLog: [],
 }
 
 export const MAX_LEVEL = 30
+export const MAX_LOG = 20
 
 export type EnhanceResult = 'success' | 'maintain' | 'destroy'
 
@@ -50,11 +67,14 @@ export function getEnhanceCost(level: number): number {
   return 50000
 }
 
-export function rollEnhance(level: number): EnhanceResult {
+export function rollEnhance(level: number, useBlessing: boolean): EnhanceResult {
   const rates = getEnhanceRates(level)
+  const bonus = useBlessing ? 10 : 0
+  const successRate = Math.min(99, rates.success + bonus)
+
   const roll = Math.random() * 100
-  if (roll < rates.success) return 'success'
-  if (roll < rates.success + rates.maintain) return 'maintain'
+  if (roll < successRate) return 'success'
+  if (roll < successRate + rates.maintain) return 'maintain'
   return 'destroy'
 }
 
@@ -73,8 +93,9 @@ export function isStreakContinued(lastCheckIn: string | null): boolean {
   const last = new Date(lastCheckIn + 'T00:00:00')
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const diffMs = today.getTime() - last.getTime()
-  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
+  const diffDays = Math.round(
+    (today.getTime() - last.getTime()) / (1000 * 60 * 60 * 24),
+  )
   return diffDays === 1
 }
 
@@ -88,3 +109,10 @@ export function getLevelTier(level: number) {
   if (level < 30) return { name: '초월', color: '#EC4899' }
   return { name: '태초', color: '#FFD700' }
 }
+
+export const SHOP = {
+  protection: { name: '파괴방지 주문서', icon: '🛡️', price: 800, desc: '파괴 시 레벨 유지' },
+  blessing: { name: '축복 주문서', icon: '✨', price: 500, desc: '성공 확률 +10%' },
+} as const
+
+export type ShopItem = keyof typeof SHOP

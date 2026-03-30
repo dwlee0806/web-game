@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import Link from 'next/link'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -12,12 +13,17 @@ export const metadata: Metadata = {
     '무료 게임',
     '강화 게임',
     '시간 때우기 게임',
+    'MMORPG 강화',
+    '강화 확률',
   ],
   openGraph: {
     title: '검 강화 시뮬레이터',
-    description: '매일 출석체크하고 검을 강화하세요!',
+    description: '매일 출석체크하고 검을 강화하세요! 성공? 파괴? 당신의 운을 시험하세요.',
     type: 'website',
+    url: 'https://web-game-6cy.pages.dev',
   },
+  metadataBase: new URL('https://web-game-6cy.pages.dev'),
+  alternates: { canonical: '/' },
 }
 
 export const viewport: Viewport = {
@@ -34,7 +40,23 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className="bg-gray-950 antialiased">{children}</body>
+      <body className="bg-gray-950 antialiased">
+        {children}
+        <footer className="bg-gray-950 border-t border-gray-800/40 py-4 text-center text-xs text-gray-600">
+          <div className="flex justify-center gap-4">
+            <Link href="/" className="hover:text-gray-400 transition-colors">
+              홈
+            </Link>
+            <Link href="/about" className="hover:text-gray-400 transition-colors">
+              소개
+            </Link>
+            <Link href="/privacy" className="hover:text-gray-400 transition-colors">
+              개인정보처리방침
+            </Link>
+          </div>
+          <p className="mt-2">© 2026 검 강화 시뮬레이터</p>
+        </footer>
+      </body>
     </html>
   )
 }
