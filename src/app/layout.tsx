@@ -1,74 +1,40 @@
-import type { Metadata, Viewport } from "next";
-import Script from "next/script";
-import { Geist } from "next/font/google";
-import "./globals.css";
-
-const geist = Geist({
-  variable: "--font-geist",
-  subsets: ["latin"],
-});
+import type { Metadata, Viewport } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: {
-    default: "어디갈까? | 주변 놀거리/먹거리 추천",
-    template: "%s | 어디갈까?",
-  },
+  title: '검 강화 시뮬레이터 | 무료 웹 강화 게임',
   description:
-    "현재 위치 기반으로 주변 맛집, 카페, 놀거리, 관광지를 추천해드립니다. 주말에 어디갈지 고민될 때, 어디갈까?",
+    '매일 출석체크로 골드를 모으고, 검을 강화하세요! 성공, 유지, 파괴의 스릴을 느껴보세요. 무료 브라우저 강화 시뮬레이터.',
   keywords: [
-    "주변 맛집",
-    "카페 추천",
-    "놀거리",
-    "관광지",
-    "주변 추천",
-    "주말 나들이",
-    "데이트 코스",
-    "어디갈까",
+    '강화 시뮬레이터',
+    '검 강화',
+    '웹 게임',
+    '무료 게임',
+    '강화 게임',
+    '시간 때우기 게임',
   ],
-  authors: [{ name: "어디갈까?" }],
-  creator: "어디갈까?",
   openGraph: {
-    title: "어디갈까? | 주변 놀거리/먹거리 추천",
-    description: "주변 놀거리/먹거리를 한눈에! 지금 어디갈지 고민될 때.",
-    siteName: "어디갈까?",
-    locale: "ko_KR",
-    type: "website",
-    url: "https://korea-playground.sjeff-dulee.workers.dev",
+    title: '검 강화 시뮬레이터',
+    description: '매일 출석체크하고 검을 강화하세요!',
+    type: 'website',
   },
-  alternates: {
-    canonical: "https://korea-playground.sjeff-dulee.workers.dev",
-  },
-};
+}
 
 export const viewport: Viewport = {
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  userScalable: false,
-  themeColor: "#FFF9F0",
-};
+  themeColor: '#030712',
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="ko" className={`${geist.variable} h-full`}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet" />
-        <meta name="google-adsense-account" content="ca-pub-3866845628289831" />
-      </head>
-      <body className="noise-bg min-h-full flex flex-col antialiased">
-        {children}
-        <Script
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3866845628289831"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
-      </body>
+    <html lang="ko">
+      <body className="bg-gray-950 antialiased">{children}</body>
     </html>
-  );
+  )
 }
