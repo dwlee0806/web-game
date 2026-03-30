@@ -3,10 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import ArenaGame from '@/components/ArenaGame'
-import { INITIAL_STATE, type GameState } from '@/lib/gameLogic'
 import type { ArenaRecord } from '@/lib/arena/types'
+import { addGoldToSave, loadSwordLevel } from '@/lib/saveUtils'
 
-const STORAGE_KEY = 'sword-enhance-v2'
 const RECORDS_KEY = 'sword-arena-records'
 
 function loadRecords(): ArenaRecord {
@@ -26,32 +25,6 @@ function updateRecords(wave: number, kills: number, survivalSec: number, gold: n
   localStorage.setItem(RECORDS_KEY, JSON.stringify(r))
 }
 
-function loadSwordLevel(): number {
-  try {
-    const session = localStorage.getItem('sword-session')
-    const key = session ? `sword-save-${session}` : STORAGE_KEY
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      const state: GameState = { ...INITIAL_STATE, ...JSON.parse(raw) }
-      return state.weapons?.[state.activeWeapon]?.level ?? state.level
-    }
-  } catch { /* */ }
-  return 0
-}
-
-function addGold(amount: number) {
-  try {
-    const session = localStorage.getItem('sword-session')
-    const key = session ? `sword-save-${session}` : STORAGE_KEY
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      const state = { ...INITIAL_STATE, ...JSON.parse(raw) }
-      state.gold += amount
-      localStorage.setItem(key, JSON.stringify(state))
-    }
-  } catch { /* */ }
-}
-
 export default function ArenaPage() {
   const router = useRouter()
   const [swordLevel, setSwordLevel] = useState(0)
@@ -66,7 +39,7 @@ export default function ArenaPage() {
   }, [])
 
   const handleExit = useCallback((gold: number, wave?: number, kills?: number, time?: number) => {
-    if (gold > 0) addGold(gold)
+    if (gold > 0) addGoldToSave(gold)
     if (wave && kills && time) updateRecords(wave, kills, Math.floor(time / 60), gold)
     router.push('/')
   }, [router])

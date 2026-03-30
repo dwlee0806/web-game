@@ -38,8 +38,6 @@ export interface Enemy {
 }
 
 export type EnemyType = 'slime' | 'bat' | 'skeleton' | 'ghost' | 'demon'
-export type BossType = 'king_slime' | 'skeleton_king' | 'demon_lord'
-
 export interface DamageNumber {
   pos: Vec2
   value: number
@@ -106,7 +104,8 @@ export interface ArenaState {
   goldEarned: number
   nextEnemyId: number
   spawnTimer: number
-  extraProjectiles: number
+  armorStacks: number
+  goldBoostStacks: number
   orbitals: number
   thorns: number
   screenShake: number

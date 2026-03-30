@@ -49,7 +49,8 @@ export default function ShareButton({ state }: { state: GameState }) {
         URL.revokeObjectURL(url)
       }
     } catch (err) {
-      alert('카드 생성에 실패했습니다: ' + (err instanceof Error ? err.message : '알 수 없는 오류'))
+      console.error('[ShareButton] Card generation failed:', err)
+      alert('카드 생성에 실패했습니다. 다시 시도해 주세요.')
     }
     setGenerating(false)
   }, [state])

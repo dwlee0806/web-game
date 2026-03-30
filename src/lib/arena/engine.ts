@@ -28,7 +28,7 @@ export function createInitialState(swordLevel: number): ArenaState {
     time: 0, kills: 0, wave: 1, prevWave: 1,
     paused: false, gameOver: false, levelUpChoices: null,
     swordLevel, goldEarned: 0, nextEnemyId: 1, spawnTimer: 0,
-    extraProjectiles: 0, orbitals: 0, thorns: 0, screenShake: 0,
+    armorStacks: 0, goldBoostStacks: 0, orbitals: 0, thorns: 0, screenShake: 0,
     waveAnnouncement: null, projectileTimer: 0, projectileDamage: 0,
     aoeDamage: 0, aoeTimer: 0, aoeInterval: 180, magnetRange: 40,
     bossActive: false,
@@ -324,7 +324,8 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
       s.combo++
       s.comboTimer = 120 // 2 seconds
       const comboMultiplier = 1 + Math.min(s.combo, 50) * 0.02
-      const goldReward = enemy.isBoss ? Math.ceil(enemy.maxHp * 2) : Math.ceil(enemy.maxHp * 0.5 * comboMultiplier)
+      const goldMultiplier = 1 + s.goldBoostStacks * 0.3
+      const goldReward = enemy.isBoss ? Math.ceil(enemy.maxHp * 2 * goldMultiplier) : Math.ceil(enemy.maxHp * 0.5 * comboMultiplier * goldMultiplier)
       s.goldEarned += goldReward
       s.xpOrbs.push({ pos: { ...enemy.pos }, value: Math.ceil(enemy.maxHp * 0.3), life: 300 })
       s.particles.push(...spawnParticles(enemy.pos, enemy.isBoss ? '#FFD700' : '#888', enemy.isBoss ? 15 : 6))
@@ -350,7 +351,8 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
     // Player collision
     const distToPlayer = dist(enemy.pos, p.pos)
     if (distToPlayer < enemy.size + 10 && p.invincibleUntil < s.time) {
-      p.hp -= enemy.damage
+      const armorReduction = 1 - Math.min(s.armorStacks * 0.15, 0.6)
+      p.hp -= Math.floor(enemy.damage * armorReduction)
       p.invincibleUntil = s.time + 30
       s.particles.push(...spawnParticles(p.pos, '#EF4444', 4))
       s.screenShake = 5

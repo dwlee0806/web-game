@@ -20,8 +20,8 @@ const ALL_SKILLS: Skill[] = [
 
   // Passive utilities
   { id: 'magnet', name: 'XP 자석', icon: '🧲', desc: 'XP 수집 범위 +50%', apply: (_p, s) => { s.magnetRange *= 1.5 } },
-  { id: 'gold_boost', name: '골드 부스트', icon: '💰', desc: '골드 획득 +30%', apply: (_p, _s) => { /* handled in gold calc */ } },
-  { id: 'armor', name: '방어력', icon: '🛡️', desc: '받는 피해 -15%', apply: (_p, _s) => { /* handled in damage calc */ } },
+  { id: 'gold_boost', name: '골드 부스트', icon: '💰', desc: '골드 획득 +30%', apply: (_p, s) => { s.goldBoostStacks++ } },
+  { id: 'armor', name: '방어력', icon: '🛡️', desc: '받는 피해 -15%', apply: (_p, s) => { s.armorStacks++ } },
 
   // Dash enhancement
   { id: 'dash_cd', name: '대시 강화', icon: '💨', desc: '대시 쿨다운 -30%', apply: (p) => { p.dashCooldown = 0 } },

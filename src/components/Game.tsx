@@ -365,7 +365,8 @@ export default function Game() {
     if (wLv >= MAX_LEVEL || s.gold < getEnhanceCost(wLv)) { setAutoMode(false); return }
     const t = setTimeout(handleEnhance, 150)
     return () => clearTimeout(t)
-  }, [autoMode, enhancing, mounted, state, handleEnhance])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoMode, enhancing, mounted, handleEnhance])
 
   const handleBuy = useCallback((item: ShopItem, qty: number) => {
     const price = SHOP[item].price * qty
@@ -834,11 +835,3 @@ function ItemToggle({ icon, label, count, active, disabled, onToggle }: { icon: 
   )
 }
 
-function Stat({ label, value, color }: { label: string; value: string | number; color?: string }) {
-  return (
-    <div>
-      <div className={`font-bold ${color ?? 'text-white'}`}>{value}</div>
-      <div className="text-[11px] text-gray-500">{label}</div>
-    </div>
-  )
-}

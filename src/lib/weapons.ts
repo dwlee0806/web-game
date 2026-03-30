@@ -12,12 +12,3 @@ export const WEAPONS: WeaponDef[] = [
   { id: 'staff', name: '지팡이', icon: '🪄', bladeShape: 'staff', unlockCost: 5000 },
   { id: 'axe', name: '도끼', icon: '🪓', bladeShape: 'axe', unlockCost: 8000 },
 ]
-
-export interface WeaponState {
-  level: number
-  highestLevel: number
-}
-
-export function getWeaponById(id: string): WeaponDef | undefined {
-  return WEAPONS.find(w => w.id === id)
-}

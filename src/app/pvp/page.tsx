@@ -3,39 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import PvpBattle from '@/components/PvpBattle'
-import { INITIAL_STATE, type GameState, getLevelTier } from '@/lib/gameLogic'
-
-const STORAGE_KEY = 'sword-enhance-v2'
-
-function loadPlayerData(): { level: number; name: string; weapon: string } {
-  try {
-    const session = localStorage.getItem('sword-session')
-    const key = session ? `sword-save-${session}` : STORAGE_KEY
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      const state: GameState = { ...INITIAL_STATE, ...JSON.parse(raw) }
-      return {
-        level: state.weapons?.[state.activeWeapon]?.level ?? state.level,
-        name: session ?? 'Guest',
-        weapon: state.activeWeapon ?? 'sword',
-      }
-    }
-  } catch { /* */ }
-  return { level: 0, name: 'Guest', weapon: 'sword' }
-}
-
-function addGold(amount: number) {
-  try {
-    const session = localStorage.getItem('sword-session')
-    const key = session ? `sword-save-${session}` : STORAGE_KEY
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      const state = { ...INITIAL_STATE, ...JSON.parse(raw) }
-      state.gold += amount
-      localStorage.setItem(key, JSON.stringify(state))
-    }
-  } catch { /* */ }
-}
+import { getLevelTier } from '@/lib/gameLogic'
+import { addGoldToSave, loadPlayerInfo } from '@/lib/saveUtils'
 
 export default function PvpPage() {
   const router = useRouter()
@@ -44,12 +13,13 @@ export default function PvpPage() {
   const [fighting, setFighting] = useState(false)
 
   useEffect(() => {
-    setPlayerData(loadPlayerData())
+    setPlayerData(loadPlayerInfo())
     setReady(true)
   }, [])
 
-  const handleFinish = useCallback((won: boolean, gold: number) => {
-    if (gold > 0) addGold(gold)
+  const handleFinish = useCallback((won: boolean, gold: number, _points: number) => {
+    if (gold > 0) addGoldToSave(gold)
+    // TODO: persist arenaPoints when server-side storage is available
     setFighting(false)
   }, [])
 
@@ -87,16 +57,10 @@ export default function PvpPage() {
           <p>⏱️ 4라운드, 약 15초 소요</p>
         </div>
 
-        <button
-          onClick={() => setFighting(true)}
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 font-bold text-lg transition-all active:scale-[0.98] shadow-lg shadow-red-900/40"
-        >
+        <button onClick={() => setFighting(true)} className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 font-bold text-lg transition-all active:scale-[0.98] shadow-lg shadow-red-900/40">
           ⚔️ 매칭 시작
         </button>
-
-        <button onClick={() => router.push('/')} className="w-full mt-3 py-3 text-sm text-gray-500 hover:text-gray-300 transition-colors">
-          ← 강화하러 돌아가기
-        </button>
+        <button onClick={() => router.push('/')} className="w-full mt-3 py-3 text-sm text-gray-500 hover:text-gray-300 transition-colors">← 강화하러 돌아가기</button>
       </div>
     </div>
   )
