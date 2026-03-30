@@ -15,15 +15,15 @@ export const metadata: Metadata = {
 }
 
 const RATES = [
-  { range: '+0 ~ +2', success: 95, maintain: 5, destroy: 0, cost: 50, tier: '일반→고급' },
-  { range: '+3 ~ +4', success: 85, maintain: 15, destroy: 0, cost: 100, tier: '고급' },
-  { range: '+5 ~ +6', success: 70, maintain: 20, destroy: 10, cost: 300, tier: '고급→희귀' },
-  { range: '+7 ~ +9', success: 55, maintain: 25, destroy: 20, cost: 600, tier: '희귀' },
-  { range: '+10 ~ +12', success: 40, maintain: 30, destroy: 30, cost: 1500, tier: '영웅' },
-  { range: '+13 ~ +15', success: 25, maintain: 30, destroy: 45, cost: 3000, tier: '영웅→전설' },
-  { range: '+16 ~ +19', success: 15, maintain: 25, destroy: 60, cost: 8000, tier: '전설' },
-  { range: '+20 ~ +24', success: 7, maintain: 18, destroy: 75, cost: 20000, tier: '신화' },
-  { range: '+25 ~ +29', success: 3, maintain: 12, destroy: 85, cost: 50000, tier: '초월' },
+  { range: '+0 ~ +2', success: 95, maintain: 5, down: 0, destroy: 0, cost: 50, tier: '일반→고급' },
+  { range: '+3 ~ +4', success: 85, maintain: 15, down: 0, destroy: 0, cost: 100, tier: '고급' },
+  { range: '+5 ~ +6', success: 70, maintain: 20, down: 5, destroy: 5, cost: 300, tier: '고급→희귀' },
+  { range: '+7 ~ +9', success: 55, maintain: 25, down: 10, destroy: 10, cost: 600, tier: '희귀' },
+  { range: '+10 ~ +12', success: 40, maintain: 25, down: 15, destroy: 20, cost: 1500, tier: '영웅' },
+  { range: '+13 ~ +15', success: 25, maintain: 25, down: 20, destroy: 30, cost: 3000, tier: '영웅→전설' },
+  { range: '+16 ~ +19', success: 15, maintain: 20, down: 25, destroy: 40, cost: 8000, tier: '전설' },
+  { range: '+20 ~ +24', success: 7, maintain: 13, down: 20, destroy: 60, cost: 20000, tier: '신화' },
+  { range: '+25 ~ +29', success: 3, maintain: 7, down: 15, destroy: 75, cost: 50000, tier: '초월' },
 ]
 
 export default function GuidePage() {
@@ -43,9 +43,9 @@ export default function GuidePage() {
                 <th className="py-3 px-2 text-left">레벨</th>
                 <th className="py-3 px-2 text-center text-emerald-400">성공</th>
                 <th className="py-3 px-2 text-center text-blue-400">유지</th>
+                <th className="py-3 px-2 text-center text-orange-400">하락</th>
                 <th className="py-3 px-2 text-center text-red-400">파괴</th>
                 <th className="py-3 px-2 text-right text-yellow-400">비용</th>
-                <th className="py-3 px-2 text-right">등급</th>
               </tr>
             </thead>
             <tbody>
@@ -54,9 +54,9 @@ export default function GuidePage() {
                   <td className="py-2.5 px-2 font-medium">{r.range}</td>
                   <td className="py-2.5 px-2 text-center text-emerald-400">{r.success}%</td>
                   <td className="py-2.5 px-2 text-center text-blue-400">{r.maintain}%</td>
+                  <td className="py-2.5 px-2 text-center text-orange-400">{r.down}%</td>
                   <td className="py-2.5 px-2 text-center text-red-400">{r.destroy}%</td>
                   <td className="py-2.5 px-2 text-right text-yellow-400">{r.cost.toLocaleString()}G</td>
-                  <td className="py-2.5 px-2 text-right text-gray-400">{r.tier}</td>
                 </tr>
               ))}
             </tbody>
@@ -119,6 +119,21 @@ export default function GuidePage() {
               </div>
               <p className="text-sm text-gray-400">강화 성공 확률이 10% 증가합니다. 고레벨 강화에서 효과적입니다.</p>
             </div>
+          </div>
+        </section>
+
+        {/* Prestige */}
+        <section className="mt-10 space-y-4">
+          <h2 className="text-lg font-bold">⭐ 환생 (프레스티지)</h2>
+          <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-800/40 text-sm text-gray-300 space-y-2">
+            <p>+10 이상 달성 시 상점에서 <strong className="text-purple-400">환생</strong>할 수 있습니다.</p>
+            <p>환생하면 레벨과 무기가 초기화되지만, 영구 보너스를 획득합니다.</p>
+            <ul className="list-disc list-inside text-gray-400 space-y-1">
+              <li>5레벨당 프레스티지 포인트 1개</li>
+              <li>포인트당 성공률 +0.5% (최대 +50%)</li>
+              <li>포인트당 골드 배율 +0.1x (최대 5x)</li>
+              <li>오프라인 골드 수익도 프레스티지에 비례</li>
+            </ul>
           </div>
         </section>
 
