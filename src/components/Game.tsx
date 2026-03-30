@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Sword from './Sword'
 import Particles from './Particles'
+import MagicCircle from './MagicCircle'
 import ShareButton from './ShareButton'
 import ShopTab from './ShopTab'
 import AchievementsTab from './AchievementsTab'
@@ -24,6 +25,7 @@ import {
   getLevelTier,
 } from '@/lib/gameLogic'
 import { type Achievement, getNewAchievements } from '@/lib/achievements'
+import { playEnhanceStart, playSuccess, playMaintain, playDestroy, playCheckIn, playBuy, playAchievement, playClick } from '@/lib/sounds'
 import {
   type DailyMissionState,
   getInitialMissionState,
@@ -83,6 +85,9 @@ export default function Game() {
   const [autoMode, setAutoMode] = useState(false)
   const [achPopup, setAchPopup] = useState<Achievement | null>(null)
   const [particleType, setParticleType] = useState<'success' | 'destroy' | null>(null)
+  const [showMagicCircle, setShowMagicCircle] = useState(false)
+  const [levelBurst, setLevelBurst] = useState(false)
+  const [soundEnabled, setSoundEnabled] = useState(true)
 
   const stateRef = useRef(state)
   stateRef.current = state
@@ -90,6 +95,8 @@ export default function Game() {
   autoRef.current = autoMode
   const missionsRef = useRef(missions)
   missionsRef.current = missions
+  const soundRef = useRef(soundEnabled)
+  soundRef.current = soundEnabled
 
   useEffect(() => {
     setState(loadState())
@@ -132,6 +139,7 @@ export default function Game() {
     const ids = fresh.map(a => a.id)
     const bonus = fresh.reduce((sum, a) => sum + a.reward, 0)
     setAchPopup(fresh[0])
+    playAchievement()
     setTimeout(() => setAchPopup(null), 2500)
     return { ...s, achievements: [...s.achievements, ...ids], gold: s.gold + bonus }
   }, [])
@@ -146,6 +154,7 @@ export default function Game() {
     setCheckInReward(reward)
     setTimeout(() => setCheckInReward(null), 2000)
     progressMission(['checkin'])
+    if (soundRef.current) playCheckIn()
   }, [awardAchievements, progressMission])
 
   const doEnhance = useCallback(() => {
@@ -161,8 +170,17 @@ export default function Game() {
     if (r === 'destroy' && wantProtect) r = 'maintain'
 
     setResult(r)
-    if (r === 'success' || r === 'destroy') {
-      setParticleType(r)
+    if (soundRef.current) {
+      if (r === 'success') playSuccess()
+      else if (r === 'maintain') playMaintain()
+      else playDestroy()
+    }
+    if (r === 'success') {
+      setParticleType('success')
+      setLevelBurst(true)
+      setTimeout(() => { setParticleType(null); setLevelBurst(false) }, 1500)
+    } else if (r === 'destroy') {
+      setParticleType('destroy')
       setTimeout(() => setParticleType(null), 1500)
     }
 
@@ -206,7 +224,10 @@ export default function Game() {
     if (enhancing) return
     setEnhancing(true)
     setResult(null)
+    setShowMagicCircle(!autoRef.current)
+    if (soundRef.current && !autoRef.current) playEnhanceStart()
     setTimeout(() => {
+      setShowMagicCircle(false)
       doEnhance()
       setTimeout(() => { setEnhancing(false); setResult(null) }, autoRef.current ? 400 : 1200)
     }, autoRef.current ? 150 : 700)
@@ -228,6 +249,7 @@ export default function Game() {
       return { ...prev, gold: prev.gold - price, [key]: prev[key] + qty }
     })
     progressMission(['buyitem'])
+    if (soundRef.current) playBuy()
   }, [progressMission])
 
   const handleClaimMission = useCallback((missionId: string) => {
@@ -299,8 +321,11 @@ export default function Game() {
               state={state} tier={tier} rates={rates} cost={cost} canAfford={canAfford} maxed={maxed}
               enhancing={enhancing} result={result} autoMode={autoMode}
               useProtection={useProtection} useBlessing={useBlessing} particleType={particleType}
+              showMagicCircle={showMagicCircle} levelBurst={levelBurst}
+              soundEnabled={soundEnabled} onToggleSound={() => setSoundEnabled(s => !s)}
               onEnhance={handleEnhance} onToggleAuto={() => setAutoMode(a => !a)}
-              onToggleProtection={() => setUseProtection(p => !p)} onToggleBlessing={() => setUseBlessing(b => !b)}
+              onToggleProtection={() => { setUseProtection(p => !p); if (soundEnabled) playClick() }}
+              onToggleBlessing={() => { setUseBlessing(b => !b); if (soundEnabled) playClick() }}
               onReset={handleReset}
             />
           )}
@@ -334,7 +359,8 @@ export default function Game() {
 
 function EnhanceContent({
   state, tier, rates, cost, canAfford, maxed, enhancing, result, autoMode,
-  useProtection, useBlessing, particleType,
+  useProtection, useBlessing, particleType, showMagicCircle, levelBurst,
+  soundEnabled, onToggleSound,
   onEnhance, onToggleAuto, onToggleProtection, onToggleBlessing, onReset,
 }: {
   state: GameState; tier: { name: string; color: string }
@@ -343,6 +369,8 @@ function EnhanceContent({
   result: EnhanceResult | null; autoMode: boolean
   useProtection: boolean; useBlessing: boolean
   particleType: 'success' | 'destroy' | null
+  showMagicCircle: boolean; levelBurst: boolean
+  soundEnabled: boolean; onToggleSound: () => void
   onEnhance: () => void; onToggleAuto: () => void
   onToggleProtection: () => void; onToggleBlessing: () => void; onReset: () => void
 }) {
@@ -351,17 +379,24 @@ function EnhanceContent({
 
   return (
     <div className="flex flex-col items-center">
-      <div className="py-6 relative">
+      <div className="py-4 relative">
         <Particles type={particleType} />
+        <MagicCircle active={showMagicCircle} color={tier.color} />
+
+        {/* Level-up burst ring */}
+        {levelBurst && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full animate-level-burst" style={{ border: `2px solid ${tier.color}`, boxShadow: `0 0 30px ${tier.color}` }} />
+        )}
+
         <div className={`${enhancing && !result ? 'animate-enhance' : ''} ${result === 'destroy' ? 'animate-shake' : ''} ${!enhancing && state.level > 0 ? 'animate-sword-breathe' : ''}`}>
           <Sword level={state.level} color={tier.color} />
         </div>
-        <div className="mt-3 text-center">
-          <div className={`text-5xl font-black transition-all duration-300 ${result === 'success' ? 'animate-pop' : ''}`} style={{ color: tier.color }}>+{state.level}</div>
-          <div className="text-sm font-bold mt-1 tracking-widest" style={{ color: tier.color }}>{tier.name}</div>
+        <div className="mt-2 text-center">
+          <div className={`text-5xl font-black transition-all duration-300 text-glow ${result === 'success' ? 'animate-pop' : ''}`} style={{ color: tier.color }}>+{state.level}</div>
+          <div className="text-sm font-bold mt-1 tracking-[0.3em] uppercase text-glow-sm" style={{ color: tier.color }}>{tier.name}</div>
         </div>
         {result && (
-          <div className={`mt-2 text-center text-xl font-black animate-result-in ${result === 'success' ? 'text-yellow-400' : result === 'maintain' ? 'text-blue-400' : 'text-red-500'}`}>
+          <div className={`mt-2 text-center text-xl font-black animate-result-in text-glow ${result === 'success' ? 'text-yellow-400' : result === 'maintain' ? 'text-blue-400' : 'text-red-500'}`}>
             {result === 'success' && '✨ 강화 성공!'}{result === 'maintain' && '😐 유지'}{result === 'destroy' && '💥 파괴!!!'}
           </div>
         )}
@@ -370,7 +405,7 @@ function EnhanceContent({
       <div className="w-full space-y-3">
         {!maxed ? (
           <>
-            <div className="bg-gray-900/80 backdrop-blur rounded-xl p-4 border border-gray-800/60">
+            <div className="glass-card rounded-xl p-4">
               <div className="flex justify-between text-sm mb-3 text-gray-300">
                 <span>+{state.level} → +{state.level + 1}</span>
                 <span className="text-yellow-400 font-medium">{cost.toLocaleString()}G</span>
@@ -423,7 +458,13 @@ function EnhanceContent({
         </div>
 
         <ShareButton state={state} />
-        <button onClick={onReset} className="w-full py-2 text-xs text-gray-600 hover:text-gray-400 transition-colors">초기화</button>
+
+        <div className="flex gap-2">
+          <button onClick={onToggleSound} className={`flex-1 py-2 rounded-lg text-xs transition-colors ${soundEnabled ? 'bg-gray-800 text-gray-300' : 'bg-gray-900 text-gray-600'}`}>
+            {soundEnabled ? '🔊 사운드 ON' : '🔇 사운드 OFF'}
+          </button>
+          <button onClick={onReset} className="flex-1 py-2 rounded-lg text-xs text-gray-600 hover:text-gray-400 bg-gray-900 transition-colors">초기화</button>
+        </div>
       </div>
     </div>
   )
