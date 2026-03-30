@@ -8,49 +8,47 @@ interface CategoryBarProps {
   readonly loading: boolean;
 }
 
-const CATEGORY_ICONS: Record<string, string> = {
-  utensils: "M3 2v7c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2V2 M7 2v20 M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7",
-  coffee: "M17 8h1a4 4 0 1 1 0 8h-1 M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z M6 2v4 M10 2v4 M14 2v4",
-  gamepad: "M6 12h4m-2-2v4 M14.5 11h.01 M18.5 13h.01 M2 15.5V8.5A2.5 2.5 0 0 1 4.5 6h15A2.5 2.5 0 0 1 22 8.5v7a2.5 2.5 0 0 1-2.5 2.5h-15A2.5 2.5 0 0 1 2 15.5z",
-  landmark: "M3 22h18 M6 18v-7 M10 18v-7 M14 18v-7 M18 18v-7 M12 2l8 9H4z",
+const CATEGORY_EMOJIS: Record<string, string> = {
+  utensils: "\uD83C\uDF5C",
+  coffee: "\u2615",
+  gamepad: "\uD83C\uDFAE",
+  landmark: "\uD83C\uDFDB\uFE0F",
+};
+
+const CATEGORY_COLORS: Record<string, { bg: string; active: string }> = {
+  FD6: { bg: "bg-red-50", active: "from-[var(--coral)] to-[var(--coral-light)]" },
+  CE7: { bg: "bg-amber-50", active: "from-amber-400 to-orange-400" },
+  CT1: { bg: "bg-violet-50", active: "from-violet-500 to-purple-500" },
+  AT4: { bg: "bg-teal-50", active: "from-[var(--mint)] to-[var(--sky)]" },
 };
 
 export default function CategoryBar({ selected, onSelect, loading }: CategoryBarProps) {
   return (
-    <div className="absolute z-20 left-0 right-0 top-14 px-3 py-2">
+    <div className="px-4 py-2.5 glass">
       <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-        {CATEGORIES.map((cat) => {
+        {CATEGORIES.map((cat, i) => {
           const isSelected = selected === cat.key;
+          const colors = CATEGORY_COLORS[cat.key];
           return (
             <button
               key={cat.key}
               type="button"
               onClick={() => onSelect(cat.key)}
               disabled={loading}
+              style={{ animationDelay: `${i * 60}ms` }}
               className={`
-                flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium
-                whitespace-nowrap transition-all shadow-sm
+                cat-pill animate-bounce-in
+                flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-medium
+                whitespace-nowrap shadow-sm
                 ${
                   isSelected
-                    ? "bg-gray-900 text-white shadow-md"
-                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                    ? `bg-gradient-to-r ${colors.active} text-white shadow-lg shadow-[var(--coral)]/20`
+                    : `${colors.bg} text-[var(--foreground)] hover:shadow-md`
                 }
                 ${loading ? "opacity-60 cursor-wait" : ""}
               `}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d={CATEGORY_ICONS[cat.icon]} />
-              </svg>
+              <span className="text-base">{CATEGORY_EMOJIS[cat.icon]}</span>
               {cat.label}
             </button>
           );

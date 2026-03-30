@@ -37,12 +37,10 @@ export default function BottomSheet({
       const threshold = 50;
 
       if (diff > threshold) {
-        // 아래로 스와이프
         setSheetState((prev) =>
           prev === "full" ? "half" : prev === "half" ? "collapsed" : "collapsed"
         );
       } else if (diff < -threshold) {
-        // 위로 스와이프
         setSheetState((prev) =>
           prev === "collapsed" ? "half" : prev === "half" ? "full" : "full"
         );
@@ -55,24 +53,25 @@ export default function BottomSheet({
     <div
       className={`
         absolute bottom-0 left-0 right-0 z-30
-        bg-white rounded-t-2xl shadow-2xl border-t border-gray-100
-        transition-all duration-300 ease-out
+        bg-[var(--warm-white)] rounded-t-3xl shadow-2xl
+        border-t border-[var(--peach)]/20
+        transition-all duration-400 ease-out
         ${SHEET_HEIGHTS[sheetState]}
-        md:relative md:h-full md:rounded-none md:shadow-none md:border-r md:border-t-0
+        md:relative md:h-full md:rounded-none md:shadow-none md:border-r md:border-t-0 md:border-[var(--peach)]/20
       `}
       style={{ minHeight }}
     >
-      {/* 드래그 핸들 (모바일) */}
+      {/* 드래그 핸들 */}
       <div
-        className="flex justify-center pt-2 pb-1 cursor-grab md:hidden"
+        className="flex justify-center pt-3 pb-1 cursor-grab md:hidden"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        <div className="w-10 h-1.5 bg-[var(--peach)] rounded-full" />
       </div>
 
       {/* 콘텐츠 */}
-      <div className="overflow-y-auto h-[calc(100%-16px)] md:h-full px-3 pb-4">
+      <div className="overflow-y-auto h-[calc(100%-20px)] md:h-full px-4 pb-6 scrollbar-hide md:custom-scrollbar">
         {children}
       </div>
     </div>

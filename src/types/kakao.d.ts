@@ -41,6 +41,13 @@ declare namespace kakao.maps {
     setPosition(position: LatLng): void;
   }
 
+  class Circle {
+    constructor(options: CircleOptions);
+    setMap(map: Map | null): void;
+    setPosition(position: LatLng): void;
+    setRadius(radius: number): void;
+  }
+
   class Size {
     constructor(width: number, height: number);
   }
@@ -63,6 +70,18 @@ declare namespace kakao.maps {
   interface InfoWindowOptions {
     content: string;
     removable?: boolean;
+  }
+
+  interface CircleOptions {
+    center: LatLng;
+    radius: number;
+    strokeWeight?: number;
+    strokeColor?: string;
+    strokeOpacity?: number;
+    strokeStyle?: string;
+    fillColor?: string;
+    fillOpacity?: number;
+    map?: Map;
   }
 
   interface CustomOverlayOptions {

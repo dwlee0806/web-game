@@ -10,6 +10,12 @@ interface SearchState {
   readonly hasMore: boolean;
 }
 
+interface SearchOptions {
+  readonly radius?: number;
+  readonly size?: number;
+  readonly sort?: "distance" | "accuracy";
+}
+
 export function useKakaoSearch() {
   const [state, setState] = useState<SearchState>({
     places: [],
@@ -22,19 +28,34 @@ export function useKakaoSearch() {
     category: CategoryKey;
     lat: number;
     lng: number;
+    radius: number;
+    size: number;
+    sort: string;
   } | null>(null);
 
   const search = useCallback(
-    async (category: CategoryKey, lat: number, lng: number) => {
+    async (
+      category: CategoryKey,
+      lat: number,
+      lng: number,
+      options?: SearchOptions
+    ) => {
+      const radius = options?.radius ?? 2000;
+      const size = options?.size ?? 15;
+      const sort = options?.sort ?? "distance";
+
       setState((prev) => ({ ...prev, loading: true, error: null }));
       setPage(1);
-      setLastQuery({ category, lat, lng });
+      setLastQuery({ category, lat, lng, radius, size, sort });
 
       try {
         const params = new URLSearchParams({
           category,
           x: lng.toString(),
           y: lat.toString(),
+          radius: radius.toString(),
+          size: size.toString(),
+          sort,
           page: "1",
         });
 
@@ -71,6 +92,9 @@ export function useKakaoSearch() {
         category: lastQuery.category,
         x: lastQuery.lng.toString(),
         y: lastQuery.lat.toString(),
+        radius: lastQuery.radius.toString(),
+        size: lastQuery.size.toString(),
+        sort: lastQuery.sort,
         page: nextPage.toString(),
       });
 

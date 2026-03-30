@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
   const y = searchParams.get("y"); // 위도 (lat)
   const radius = searchParams.get("radius") || "2000";
   const page = searchParams.get("page") || "1";
+  const size = searchParams.get("size") || "15";
   const sort = searchParams.get("sort") || "distance";
 
   if (!categoryCode || !x || !y) {
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
   url.searchParams.set("y", y);
   url.searchParams.set("radius", radius);
   url.searchParams.set("page", page);
-  url.searchParams.set("size", "15");
+  url.searchParams.set("size", size);
   url.searchParams.set("sort", sort);
 
   try {

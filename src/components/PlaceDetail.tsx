@@ -16,71 +16,56 @@ function formatDistance(meters: string): string {
 
 export default function PlaceDetail({ place, onClose }: PlaceDetailProps) {
   return (
-    <div className="bg-white rounded-t-2xl shadow-2xl border-t border-gray-100 animate-slide-up">
-      <div className="p-5">
-        {/* 닫기 핸들 */}
-        <div className="flex justify-center mb-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-10 h-1 bg-gray-300 rounded-full"
-            aria-label="닫기"
-          />
-        </div>
+    <div className="animate-slide-up">
+      <div className="py-3">
+        {/* 뒤로가기 */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex items-center gap-1.5 text-sm text-[var(--coral)] hover:text-[var(--coral-light)] transition-colors mb-4 font-medium"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+          목록으로
+        </button>
 
         {/* 장소 이름 */}
-        <h2 className="text-xl font-bold text-gray-900">{place.name}</h2>
-        <p className="text-sm text-gray-500 mt-1">{place.category}</p>
+        <h2 className="text-2xl font-bold text-[var(--foreground)]">{place.name}</h2>
+        <p className="text-sm text-[var(--foreground)]/50 mt-1">{place.category}</p>
 
-        {/* 정보 리스트 */}
-        <div className="mt-4 space-y-3">
+        {/* 정보 카드 */}
+        <div className="mt-5 space-y-3">
           {/* 주소 */}
-          <div className="flex items-start gap-3">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-gray-400 mt-0.5 shrink-0"
-            >
-              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-[var(--cream)]">
+            <span className="text-base mt-0.5">📍</span>
             <div>
-              <p className="text-sm text-gray-800">
+              <p className="text-sm text-[var(--foreground)]">
                 {place.roadAddress || place.address}
               </p>
               {place.roadAddress && place.address !== place.roadAddress && (
-                <p className="text-xs text-gray-400 mt-0.5">{place.address}</p>
+                <p className="text-xs text-[var(--foreground)]/40 mt-0.5">{place.address}</p>
               )}
             </div>
           </div>
 
           {/* 전화 */}
           {place.phone && (
-            <div className="flex items-center gap-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-gray-400 shrink-0"
-              >
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-              </svg>
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--cream)]">
+              <span className="text-base">📞</span>
               <a
                 href={`tel:${place.phone}`}
-                className="text-sm text-blue-600 hover:underline"
+                className="text-sm text-[var(--coral)] font-medium hover:underline"
               >
                 {place.phone}
               </a>
@@ -89,35 +74,21 @@ export default function PlaceDetail({ place, onClose }: PlaceDetailProps) {
 
           {/* 거리 */}
           {place.distance && (
-            <div className="flex items-center gap-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-gray-400 shrink-0"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-              <p className="text-sm text-gray-600">
-                현재 위치에서 {formatDistance(place.distance)}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--cream)]">
+              <span className="text-base">🚶</span>
+              <p className="text-sm text-[var(--foreground)]/70">
+                여기서 {formatDistance(place.distance)}
               </p>
             </div>
           )}
         </div>
 
-        {/* 카카오맵에서 보기 버튼 */}
+        {/* 카카오맵 버튼 */}
         <a
           href={place.placeUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-5 flex items-center justify-center gap-2 w-full py-3 bg-[#FEE500] text-gray-900 font-semibold rounded-xl hover:bg-[#FAD800] transition-colors"
+          className="mt-6 flex items-center justify-center gap-2 w-full py-3.5 bg-gradient-to-r from-[#FEE500] to-[#FFD43B] text-[var(--foreground)] font-bold rounded-2xl hover:shadow-lg hover:shadow-[#FEE500]/30 transition-all duration-300 active:scale-[0.98]"
         >
           카카오맵에서 보기
           <svg
