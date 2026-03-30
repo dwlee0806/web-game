@@ -716,6 +716,14 @@ function EnhanceContent({
           </div>
         </div>
 
+        {/* Arena entry */}
+        <a
+          href="/arena"
+          className="block w-full py-3 rounded-xl bg-gradient-to-r from-red-700 to-orange-700 hover:from-red-600 hover:to-orange-600 font-bold text-sm text-center transition-all active:scale-[0.98]"
+        >
+          🗡️ 전장 입장 — 검으로 몬스터 사냥!
+        </a>
+
         <AdBanner className="my-2 min-h-[100px] rounded-xl overflow-hidden" />
 
         <ShareButton state={state} />
