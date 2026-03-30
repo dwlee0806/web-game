@@ -439,7 +439,7 @@ function EnhanceContent({
         )}
 
         <div className={`${enhancing && !result ? 'animate-enhance' : ''} ${result === 'destroy' ? 'animate-shake' : ''} ${!enhancing && state.level > 0 ? 'animate-sword-breathe' : ''}`}>
-          <Sword level={state.level} color={tier.color} />
+          <Sword level={state.level} color={tier.color} weaponType={state.activeWeapon} />
         </div>
         <div className="mt-2 text-center">
           <div className={`text-5xl font-black transition-all duration-300 text-glow ${result === 'success' ? 'animate-pop' : ''}`} style={{ color: tier.color }}>+{state.level}</div>
