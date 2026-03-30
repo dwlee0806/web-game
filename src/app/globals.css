@@ -83,8 +83,14 @@ html {
 /* ── Sword aura & breathing ── */
 
 @keyframes sword-breathe {
-  0%, 100% { filter: brightness(1) saturate(1); }
-  50% { filter: brightness(1.12) saturate(1.1); }
+  0%, 100% { filter: brightness(1) saturate(1); transform: translateY(0); }
+  50% { filter: brightness(1.15) saturate(1.15); transform: translateY(-2px); }
+}
+
+@keyframes sword-idle-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-3px) rotate(0.5deg); }
+  75% { transform: translateY(2px) rotate(-0.5deg); }
 }
 
 @keyframes aura-spin {

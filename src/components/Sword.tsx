@@ -9,224 +9,234 @@ interface SwordProps {
   specialSkin?: string | null
 }
 
-// Blade shape evolves every 5 levels
-function getBladeWidth(level: number) {
-  if (level < 5) return { tip: 50, mid: 62, base: 58 }       // Slim starter
-  if (level < 10) return { tip: 50, mid: 66, base: 60 }      // Slightly wider
-  if (level < 15) return { tip: 50, mid: 70, base: 62 }      // Broad sword
-  if (level < 20) return { tip: 48, mid: 74, base: 64 }      // Great sword
-  if (level < 25) return { tip: 46, mid: 78, base: 66 }      // Legendary blade
-  return { tip: 44, mid: 82, base: 68 }                       // Transcendent
-}
-
-function getBladeLength(level: number) {
-  if (level < 10) return 160
-  if (level < 20) return 170
-  return 180
-}
-
-// Special skins for easter egg
-const SPECIAL_SKINS: Record<string, { name: string; bladeColor: string; runeColor: string; gemColor: string }> = {
-  rainbow: { name: '무지개검', bladeColor: '#FF6B6B', runeColor: '#FFD93D', gemColor: '#6BCB77' },
-  void: { name: '공허의 검', bladeColor: '#1a1a2e', runeColor: '#e94560', gemColor: '#0f3460' },
-  crystal: { name: '수정검', bladeColor: '#89CFF0', runeColor: '#FFFFFF', gemColor: '#00BFFF' },
-  flame: { name: '화염검', bladeColor: '#FF4500', runeColor: '#FFD700', gemColor: '#FF6347' },
-  shadow: { name: '그림자검', bladeColor: '#2C2C2C', runeColor: '#8B5CF6', gemColor: '#4C1D95' },
+const SKINS: Record<string, { blade: string; accent: string; gem: string }> = {
+  rainbow: { blade: '#FF6B6B', accent: '#FFD93D', gem: '#6BCB77' },
+  void: { blade: '#16132B', accent: '#e94560', gem: '#0f3460' },
+  crystal: { blade: '#B8E4FF', accent: '#FFFFFF', gem: '#00BFFF' },
+  flame: { blade: '#FF4500', accent: '#FFD700', gem: '#FF6347' },
+  shadow: { blade: '#1C1C2E', accent: '#8B5CF6', gem: '#4C1D95' },
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default memo(function Sword({ level, color, weaponType = 'sword', specialSkin = null }: SwordProps) {
-  const glow = Math.min(level * 3, 60)
-  const skin = specialSkin ? SPECIAL_SKINS[specialSkin] : null
-  const bladeColor = skin?.bladeColor ?? (level > 0 ? color : '#8B9DAF')
-  const runeColor = skin?.runeColor ?? color
-  const isLegendary = level >= 20
-  const isTranscend = level >= 25
-  const isGenesis = level >= 30
-  const blade = getBladeWidth(level)
-  const bladeLen = getBladeLength(level)
+  const skin = specialSkin ? SKINS[specialSkin] : null
+  const bc = skin?.blade ?? (level > 0 ? color : '#9EAFC0')
+  const ac = skin?.accent ?? color
+  const gc = skin?.gem ?? (level > 0 ? color : '#DAA520')
+  const glow = Math.min(level * 3, 55)
+  const isHigh = level >= 15
+  const isLeg = level >= 20
+  const isMax = level >= 25
+  const isGen = level >= 30
 
-  // Double edge serrations for level 15+
-  const hasSerrations = level >= 15
-  // Wing guards for level 20+
-  const hasWingGuard = level >= 20
-  // Floating gems for level 25+
-  const hasFloatingGems = level >= 25
+  // Blade geometry evolves
+  const bw = level < 5 ? 12 : level < 10 ? 14 : level < 20 ? 16 : 18
+  const bl = level < 10 ? 120 : level < 20 ? 130 : 140
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: 160, height: 300 }}>
-      {/* Rotating aura rings */}
+    <div className="relative flex items-center justify-center" style={{ width: 120, height: 220 }}>
+      {/* Ambient aura rings */}
       {level >= 10 && (
-        <>
-          <div className="absolute rounded-full animate-aura-spin" style={{ width: 200 + level * 2, height: 200 + level * 2, border: `1px solid ${bladeColor}20`, boxShadow: `0 0 ${level}px ${bladeColor}15` }} />
-          {isLegendary && <div className="absolute rounded-full animate-aura-spin-reverse" style={{ width: 170 + level * 2, height: 170 + level * 2, border: `1px dashed ${bladeColor}30` }} />}
-          {isGenesis && <div className="absolute rounded-full animate-aura-spin" style={{ width: 230, height: 230, border: `1px solid ${bladeColor}15`, animationDuration: '30s' }} />}
-        </>
+        <div className="absolute rounded-full animate-aura-spin" style={{ width: 160 + level, height: 160 + level, border: `1px solid ${bc}18`, boxShadow: `0 0 ${level * 0.5}px ${bc}10` }} />
+      )}
+      {isLeg && (
+        <div className="absolute rounded-full animate-aura-spin-reverse" style={{ width: 140 + level, height: 140 + level, border: `1px dashed ${bc}20` }} />
       )}
 
-      {/* Floating gems (25+) */}
-      {hasFloatingGems && [0, 120, 240].map(deg => (
-        <div
-          key={deg}
-          className="absolute w-2 h-2 rounded-full animate-orbit"
-          style={{
-            backgroundColor: skin?.gemColor ?? color,
-            boxShadow: `0 0 8px ${skin?.gemColor ?? color}`,
-            animationDelay: `${deg / 360 * 3}s`,
-            top: '45%',
-            left: '50%',
-            transformOrigin: '0 -60px',
-          }}
-        />
+      {/* Floating gems orbit */}
+      {isMax && [0, 120, 240].map(deg => (
+        <div key={deg} className="absolute w-1.5 h-1.5 rounded-full animate-orbit" style={{ backgroundColor: gc, boxShadow: `0 0 6px ${gc}`, animationDelay: `${deg / 120}s`, top: '45%', left: '50%', transformOrigin: '0 -50px' }} />
       ))}
 
-      {/* Ground reflection */}
-      {level > 0 && (
-        <div className="absolute bottom-4 w-20 h-4 rounded-full blur-xl animate-pulse" style={{ backgroundColor: `${bladeColor}30` }} />
-      )}
+      {/* Ground glow */}
+      {level > 0 && <div className="absolute bottom-1 w-16 h-3 rounded-full blur-lg" style={{ backgroundColor: `${bc}25` }} />}
 
       <svg
-        width="140"
-        height="280"
-        viewBox="0 0 140 280"
-        className="relative z-10 transition-all duration-700"
-        style={{
-          filter: level > 0
-            ? `drop-shadow(0 0 ${glow}px ${bladeColor}) drop-shadow(0 0 ${glow * 0.6}px ${bladeColor}80)`
-            : 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))',
-        }}
+        width="100"
+        height="210"
+        viewBox="0 0 100 210"
+        className="relative z-10"
+        style={{ filter: level > 0 ? `drop-shadow(0 0 ${glow}px ${bc}) drop-shadow(0 0 ${glow * 0.4}px ${bc}80)` : 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}
       >
         <defs>
-          <linearGradient id="blade-main" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={bladeColor} stopOpacity="0.5" />
-            <stop offset="35%" stopColor="#FFFFFF" stopOpacity="0.95" />
-            <stop offset="65%" stopColor="#FFFFFF" stopOpacity="0.85" />
-            <stop offset="100%" stopColor={bladeColor} stopOpacity="0.5" />
+          {/* Metallic blade gradient */}
+          <linearGradient id="bld" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={bc} stopOpacity="0.4" />
+            <stop offset="20%" stopColor="#E8ECF0" stopOpacity="0.95" />
+            <stop offset="40%" stopColor="#FFFFFF" stopOpacity="1" />
+            <stop offset="55%" stopColor="#F0F4F8" stopOpacity="0.9" />
+            <stop offset="75%" stopColor="#D0D8E0" stopOpacity="0.8" />
+            <stop offset="100%" stopColor={bc} stopOpacity="0.4" />
           </linearGradient>
-          <linearGradient id="guard-main" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={isLegendary ? bladeColor : '#FFD700'} />
-            <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0.3" />
-            <stop offset="100%" stopColor={isLegendary ? bladeColor : '#B8860B'} />
+
+          {/* Blade edge highlight */}
+          <linearGradient id="edg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={bc} stopOpacity="0.8" />
+            <stop offset="30%" stopColor="#FFFFFF" stopOpacity="0.5" />
+            <stop offset="100%" stopColor={bc} stopOpacity="0.3" />
           </linearGradient>
-          <radialGradient id="gem-main" cx="50%" cy="40%">
-            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
-            <stop offset="40%" stopColor={skin?.gemColor ?? (level > 0 ? color : '#DAA520')} />
-            <stop offset="100%" stopColor={skin?.gemColor ?? (level > 0 ? color : '#8B6914')} stopOpacity="0.6" />
+
+          {/* Guard metallic */}
+          <linearGradient id="grd" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={isLeg ? bc : '#FFD700'} />
+            <stop offset="30%" stopColor="#FFFBE6" stopOpacity="0.6" />
+            <stop offset="70%" stopColor={isLeg ? bc : '#DAA520'} />
+            <stop offset="100%" stopColor={isLeg ? ac : '#8B6914'} />
+          </linearGradient>
+
+          {/* Gem radial */}
+          <radialGradient id="gem" cx="35%" cy="30%">
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
+            <stop offset="25%" stopColor="#FFFFFF" stopOpacity="0.6" />
+            <stop offset="50%" stopColor={gc} />
+            <stop offset="100%" stopColor={gc} stopOpacity="0.5" />
           </radialGradient>
-          {level >= 5 && (
-            <filter id="rune-g">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-          )}
-          {/* Rainbow gradient for special skin */}
+
+          {/* Grip leather */}
+          <pattern id="lth" width="8" height="8" patternUnits="userSpaceOnUse">
+            <rect width="8" height="8" fill="#3D2415" />
+            <line x1="0" y1="4" x2="8" y2="4" stroke="#5A3A20" strokeWidth="1.5" />
+          </pattern>
+
+          {/* Rune glow */}
+          <filter id="rg">
+            <feGaussianBlur stdDeviation="1.5" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+
+          {/* Rainbow for special */}
           {specialSkin === 'rainbow' && (
-            <linearGradient id="rainbow-blade" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#FF6B6B" /><stop offset="20%" stopColor="#FFD93D" />
-              <stop offset="40%" stopColor="#6BCB77" /><stop offset="60%" stopColor="#4D96FF" />
-              <stop offset="80%" stopColor="#9B59B6" /><stop offset="100%" stopColor="#FF6B6B" />
+            <linearGradient id="rbw" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#FF6B6B" /><stop offset="25%" stopColor="#FFD93D" />
+              <stop offset="50%" stopColor="#6BCB77" /><stop offset="75%" stopColor="#4D96FF" /><stop offset="100%" stopColor="#9B59B6" />
             </linearGradient>
           )}
         </defs>
 
-        {/* BLADE - shape evolves with level */}
+        {/* ═══ BLADE ═══ */}
         <polygon
-          points={`70,4 ${blade.mid + 10},${bladeLen} 70,${bladeLen + 20} ${140 - blade.mid - 10},${bladeLen}`}
-          fill={specialSkin === 'rainbow' ? 'url(#rainbow-blade)' : 'url(#blade-main)'}
-          stroke={bladeColor}
-          strokeWidth="0.6"
+          points={`50,3 ${50 + bw},${bl} 50,${bl + 15} ${50 - bw},${bl}`}
+          fill={specialSkin === 'rainbow' ? 'url(#rbw)' : 'url(#bld)'}
+          stroke={bc}
+          strokeWidth="0.5"
+          strokeLinejoin="round"
         />
 
-        {/* Center fuller */}
-        <line x1="70" y1="16" x2="70" y2={bladeLen - 2} stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" />
+        {/* Blade center fuller (groove) */}
+        <line x1="50" y1="14" x2="50" y2={bl - 5} stroke="url(#edg)" strokeWidth="1.5" opacity="0.4" />
 
-        {/* Serrations (15+) */}
-        {hasSerrations && [0, 1, 2].map(i => {
-          const y = 40 + i * 35
+        {/* Edge highlight left */}
+        <line x1={50 - bw + 2} y1={25} x2={50 - bw} y2={bl - 2} stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" />
+        {/* Edge highlight right */}
+        <line x1={50 + bw - 2} y1={25} x2={50 + bw} y2={bl - 2} stroke="rgba(255,255,255,0.12)" strokeWidth="0.5" />
+
+        {/* Blade tip highlight (reflection) */}
+        <polygon points={`50,3 ${50 + bw * 0.4},${bl * 0.4} 50,${bl * 0.5} ${50 - bw * 0.15},${bl * 0.3}`} fill="rgba(255,255,255,0.15)" />
+
+        {/* Serrations (level 15+) */}
+        {isHigh && [0, 1, 2].map(i => {
+          const y = 35 + i * 30
           return (
-            <g key={i} opacity="0.4">
-              <line x1={140 - blade.mid - 8} y1={y} x2={140 - blade.mid - 14} y2={y + 8} stroke={bladeColor} strokeWidth="1" />
-              <line x1={blade.mid + 8} y1={y} x2={blade.mid + 14} y2={y + 8} stroke={bladeColor} strokeWidth="1" />
+            <g key={`s${i}`} opacity="0.3">
+              <polygon points={`${50 - bw},${y} ${50 - bw - 4},${y + 5} ${50 - bw},${y + 10}`} fill={bc} />
+              <polygon points={`${50 + bw},${y} ${50 + bw + 4},${y + 5} ${50 + bw},${y + 10}`} fill={bc} />
             </g>
           )
         })}
 
-        {/* Runes (5+) */}
+        {/* Runes (level 5+) */}
         {level >= 5 && (
-          <g filter="url(#rune-g)" opacity={Math.min(0.3 + level * 0.02, 0.8)}>
-            <text x="70" y="55" textAnchor="middle" fontSize="10" fill={runeColor} fontFamily="serif">✦</text>
-            <text x="70" y="85" textAnchor="middle" fontSize="10" fill={runeColor} fontFamily="serif">◆</text>
-            <text x="70" y="115" textAnchor="middle" fontSize="10" fill={runeColor} fontFamily="serif">✦</text>
-            {level >= 15 && <text x="70" y="40" textAnchor="middle" fontSize="8" fill={runeColor} fontFamily="serif">⚜</text>}
-            {isTranscend && <text x="70" y="140" textAnchor="middle" fontSize="9" fill={runeColor} fontFamily="serif">✧</text>}
+          <g filter="url(#rg)" opacity={Math.min(0.3 + level * 0.025, 0.85)}>
+            <text x="50" y="45" textAnchor="middle" fontSize="8" fill={ac} fontFamily="serif">✦</text>
+            <text x="50" y="70" textAnchor="middle" fontSize="8" fill={ac} fontFamily="serif">◈</text>
+            <text x="50" y="95" textAnchor="middle" fontSize="8" fill={ac} fontFamily="serif">✦</text>
+            {isHigh && <text x="50" y="32" textAnchor="middle" fontSize="7" fill={ac} fontFamily="serif">⚜</text>}
+            {isMax && <text x="50" y="110" textAnchor="middle" fontSize="7" fill={ac} fontFamily="serif">✧</text>}
           </g>
         )}
 
-        {/* CROSSGUARD */}
-        {hasWingGuard ? (
-          // Wing-shaped guard for 20+
+        {/* ═══ CROSSGUARD ═══ */}
+        {isLeg ? (
+          // Wing guard (level 20+)
           <path
-            d={`M8,${bladeLen + 18} Q8,${bladeLen + 12} 20,${bladeLen + 12} L120,${bladeLen + 12} Q132,${bladeLen + 12} 132,${bladeLen + 18} L132,${bladeLen + 24} Q132,${bladeLen + 30} 120,${bladeLen + 28} L20,${bladeLen + 28} Q8,${bladeLen + 30} 8,${bladeLen + 24} Z`}
-            fill="url(#guard-main)"
-            stroke={bladeColor}
-            strokeWidth="0.5"
+            d={`M8,${bl + 13} C8,${bl + 8} 18,${bl + 8} 25,${bl + 10} L75,${bl + 10} C82,${bl + 8} 92,${bl + 8} 92,${bl + 13} L92,${bl + 18} C92,${bl + 23} 82,${bl + 24} 75,${bl + 22} L25,${bl + 22} C18,${bl + 24} 8,${bl + 23} 8,${bl + 18} Z`}
+            fill="url(#grd)" stroke={bc} strokeWidth="0.4"
           />
         ) : (
-          <path
-            d={`M14,${bladeLen + 18} Q14,${bladeLen + 12} 22,${bladeLen + 12} L118,${bladeLen + 12} Q126,${bladeLen + 12} 126,${bladeLen + 18} L126,${bladeLen + 22} Q126,${bladeLen + 28} 118,${bladeLen + 28} L22,${bladeLen + 28} Q14,${bladeLen + 28} 14,${bladeLen + 22} Z`}
-            fill="url(#guard-main)"
-            stroke={isLegendary ? bladeColor : '#DAA520'}
-            strokeWidth="0.5"
-          />
+          <rect x="18" y={bl + 10} width="64" height="10" rx="3" fill="url(#grd)" stroke={isHigh ? bc : '#DAA520'} strokeWidth="0.4" />
         )}
 
-        {/* Guard ornaments */}
-        <circle cx="24" cy={bladeLen + 20} r="3" fill={level > 0 ? bladeColor : '#DAA520'} opacity="0.7" />
-        <circle cx="116" cy={bladeLen + 20} r="3" fill={level > 0 ? bladeColor : '#DAA520'} opacity="0.7" />
+        {/* Guard gems */}
+        <circle cx="24" cy={bl + 16} r="2.5" fill={gc} opacity="0.8">
+          <animate attributeName="opacity" values="0.8;0.4;0.8" dur="2.5s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="76" cy={bl + 16} r="2.5" fill={gc} opacity="0.8">
+          <animate attributeName="opacity" values="0.8;0.4;0.8" dur="2.5s" repeatCount="indefinite" begin="1.2s" />
+        </circle>
 
-        {/* GRIP */}
-        <rect x="56" y={bladeLen + 28} width="28" height="44" rx="3" fill="#2A1810" />
+        {/* ═══ GRIP ═══ */}
+        <rect x="40" y={bl + 22} width="20" height="36" rx="2" fill="url(#lth)" />
+        {/* Grip wire wrapping */}
         {[0, 1, 2, 3, 4].map(i => (
-          <line key={i} x1="58" y1={bladeLen + 34 + i * 8} x2="82" y2={bladeLen + 34 + i * 8} stroke="#8B6914" strokeWidth="1.5" opacity="0.5" />
+          <line key={`w${i}`} x1="42" y1={bl + 27 + i * 7} x2="58" y2={bl + 27 + i * 7} stroke="#8B6914" strokeWidth="1" opacity="0.5" />
         ))}
 
-        {/* POMMEL */}
-        <ellipse cx="70" cy={bladeLen + 78} rx="13" ry="11" fill="url(#guard-main)" stroke={isLegendary ? bladeColor : '#DAA520'} strokeWidth="0.5" />
-        <circle cx="70" cy={bladeLen + 77} r="5.5" fill="url(#gem-main)" />
-        {level > 0 && (
-          <circle cx="68" cy={bladeLen + 75} r="1.5" fill="white" opacity="0.7">
-            <animate attributeName="opacity" values="0.7;0.2;0.7" dur="2s" repeatCount="indefinite" />
-          </circle>
-        )}
+        {/* ═══ POMMEL ═══ */}
+        <ellipse cx="50" cy={bl + 62} rx="11" ry="9" fill="url(#grd)" stroke={isLeg ? bc : '#B8860B'} strokeWidth="0.4" />
+        {/* Pommel gem with sparkle */}
+        <circle cx="50" cy={bl + 61} r="5" fill="url(#gem)">
+          <animate attributeName="r" values="5;5.5;5" dur="3s" repeatCount="indefinite" />
+        </circle>
+        {/* Gem sparkle highlight */}
+        <circle cx="48" cy={bl + 59} r="1.2" fill="white" opacity="0.8">
+          <animate attributeName="opacity" values="0.8;0.3;0.8" dur="1.8s" repeatCount="indefinite" />
+        </circle>
 
-        {/* Genesis crown rays */}
-        {isGenesis && (
-          <g opacity="0.6">
-            {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => (
-              <line key={deg} x1="70" y1="4" x2={70 + Math.cos((deg * Math.PI) / 180) * 24} y2={4 + Math.sin((deg * Math.PI) / 180) * 24} stroke={bladeColor} strokeWidth="0.8" opacity="0.4">
-                <animate attributeName="opacity" values="0.4;0.1;0.4" dur={`${1.5 + deg * 0.003}s`} repeatCount="indefinite" />
+        {/* ═══ GENESIS CROWN (30) ═══ */}
+        {isGen && (
+          <g>
+            {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map(deg => (
+              <line key={`r${deg}`} x1="50" y1="3"
+                x2={50 + Math.cos((deg * Math.PI) / 180) * 18}
+                y2={3 + Math.sin((deg * Math.PI) / 180) * 18}
+                stroke={bc} strokeWidth="0.6" opacity="0.3">
+                <animate attributeName="opacity" values="0.3;0.08;0.3" dur={`${1.8 + deg * 0.002}s`} repeatCount="indefinite" />
               </line>
             ))}
           </g>
         )}
 
-        {/* Special skin flame effect */}
+        {/* ═══ SPECIAL SKIN EFFECTS ═══ */}
         {specialSkin === 'flame' && (
-          <g opacity="0.6">
-            {[0, 1, 2, 3].map(i => (
-              <ellipse key={i} cx={55 + i * 10} cy={20 + i * 5} rx="4" ry="8" fill="#FF4500" opacity="0.3">
-                <animate attributeName="ry" values="8;12;8" dur={`${0.8 + i * 0.2}s`} repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.3;0.6;0.3" dur={`${0.8 + i * 0.2}s`} repeatCount="indefinite" />
+          <g>
+            {[0, 1, 2, 3, 4].map(i => (
+              <ellipse key={`f${i}`} cx={42 + i * 5} cy={12 + i * 8} rx="3" ry="7" fill="#FF4500" opacity="0.25">
+                <animate attributeName="ry" values="7;11;7" dur={`${0.7 + i * 0.15}s`} repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.25;0.5;0.25" dur={`${0.7 + i * 0.15}s`} repeatCount="indefinite" />
               </ellipse>
             ))}
           </g>
         )}
 
-        {/* Void skin dark aura */}
         {specialSkin === 'void' && (
-          <circle cx="70" cy="90" r="50" fill="none" stroke="#e94560" strokeWidth="0.5" opacity="0.3">
-            <animate attributeName="r" values="50;55;50" dur="3s" repeatCount="indefinite" />
-          </circle>
+          <g>
+            <circle cx="50" cy={bl * 0.5} r="30" fill="none" stroke="#e94560" strokeWidth="0.3" opacity="0.2">
+              <animate attributeName="r" values="30;35;30" dur="3s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="50" cy={bl * 0.5} r="20" fill="none" stroke="#e94560" strokeWidth="0.4" opacity="0.15">
+              <animate attributeName="r" values="20;24;20" dur="2.2s" repeatCount="indefinite" />
+            </circle>
+          </g>
+        )}
+
+        {specialSkin === 'crystal' && (
+          <g>
+            {[25, 50, 75, 100].map(y => (
+              <polygon key={y} points={`50,${y - 3} ${50 + 3},${y} 50,${y + 3} ${50 - 3},${y}`} fill="#FFFFFF" opacity="0.3">
+                <animate attributeName="opacity" values="0.3;0.6;0.3" dur={`${1 + y * 0.01}s`} repeatCount="indefinite" />
+              </polygon>
+            ))}
+          </g>
         )}
       </svg>
     </div>
