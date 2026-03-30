@@ -85,3 +85,41 @@ export function playAchievement() {
 export function playClick() {
   playTone(800, 0.04, 'sine', 0.05)
 }
+
+// Arena sounds
+export function playArenaHit() {
+  playTone(300, 0.06, 'square', 0.06)
+  playNoise(0.04, 0.04)
+}
+
+export function playArenaKill() {
+  playTone(600, 0.08, 'sine', 0.08)
+  setTimeout(() => playTone(800, 0.1, 'sine', 0.06), 50)
+}
+
+export function playArenaDamage() {
+  playTone(150, 0.1, 'sawtooth', 0.08)
+  playNoise(0.08, 0.06)
+}
+
+export function playArenaBossAlert() {
+  playTone(200, 0.2, 'square', 0.1)
+  setTimeout(() => playTone(200, 0.2, 'square', 0.1), 250)
+  setTimeout(() => playTone(300, 0.4, 'square', 0.12), 500)
+}
+
+export function playArenaLevelUp() {
+  const notes = [440, 554, 659, 880]
+  notes.forEach((f, i) => setTimeout(() => playTone(f, 0.12, 'sine', 0.1), i * 70))
+}
+
+export function playArenaDash() {
+  playTone(500, 0.06, 'triangle', 0.06)
+  playNoise(0.03, 0.03)
+}
+
+export function playArenaBossKill() {
+  const notes = [523, 659, 784, 1047]
+  notes.forEach((f, i) => setTimeout(() => playTone(f, 0.2, 'sine', 0.14), i * 100))
+  setTimeout(() => playNoise(0.15, 0.08), 400)
+}

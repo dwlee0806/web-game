@@ -16,6 +16,9 @@ export interface Player {
   swordSpeed: number
   swordAngle: number
   invincibleUntil: number
+  dashCooldown: number
+  dashUntil: number
+  hpRegen: number
 }
 
 export interface Enemy {
@@ -29,9 +32,32 @@ export interface Enemy {
   type: EnemyType
   knockbackUntil: number
   knockbackDir: Vec2
+  isBoss: boolean
+  bossPhase: number
+  attackCooldown: number
 }
 
 export type EnemyType = 'slime' | 'bat' | 'skeleton' | 'ghost' | 'demon'
+export type BossType = 'king_slime' | 'skeleton_king' | 'demon_lord'
+
+export interface DamageNumber {
+  pos: Vec2
+  value: number
+  life: number
+  color: string
+  crit: boolean
+}
+
+export interface Projectile {
+  pos: Vec2
+  vel: Vec2
+  damage: number
+  life: number
+  size: number
+  color: string
+  pierce: number
+  hitIds: number[]
+}
 
 export interface Particle {
   pos: Vec2
@@ -56,14 +82,23 @@ export interface Skill {
   apply: (player: Player, state: ArenaState) => void
 }
 
+export interface WaveAnnouncement {
+  text: string
+  life: number
+  color: string
+}
+
 export interface ArenaState {
   player: Player
   enemies: Enemy[]
   particles: Particle[]
   xpOrbs: XpOrb[]
+  damageNumbers: DamageNumber[]
+  projectiles: Projectile[]
   time: number
   kills: number
   wave: number
+  prevWave: number
   paused: boolean
   gameOver: boolean
   levelUpChoices: Skill[] | null
@@ -74,7 +109,24 @@ export interface ArenaState {
   extraProjectiles: number
   orbitals: number
   thorns: number
+  screenShake: number
+  waveAnnouncement: WaveAnnouncement | null
+  projectileTimer: number
+  projectileDamage: number
+  aoeDamage: number
+  aoeTimer: number
+  aoeInterval: number
+  magnetRange: number
+  bossActive: boolean
 }
 
 export const ARENA_W = 800
 export const ARENA_H = 600
+
+export interface ArenaRecord {
+  highestWave: number
+  mostKills: number
+  longestSurvival: number
+  totalGoldEarned: number
+  totalRuns: number
+}

@@ -1,4 +1,4 @@
-import type { ArenaState, Player, Enemy, EnemyType, Vec2, Particle, XpOrb } from './types'
+import type { ArenaState, Player, Enemy, EnemyType, Vec2, Particle, XpOrb, DamageNumber, Projectile } from './types'
 import { ARENA_W, ARENA_H } from './types'
 import { getRandomSkills } from './skills'
 
@@ -19,43 +19,28 @@ export function createInitialState(swordLevel: number): ArenaState {
   return {
     player: {
       pos: { x: ARENA_W / 2, y: ARENA_H / 2 },
-      hp: baseHp,
-      maxHp: baseHp,
-      speed: baseSpeed,
-      damage: baseDmg,
-      xp: 0,
-      level: 1,
-      xpToNext: 10,
-      swordRange: 50 + swordLevel * 2,
-      swordSpeed: 3 + swordLevel * 0.1,
-      swordAngle: 0,
-      invincibleUntil: 0,
+      hp: baseHp, maxHp: baseHp, speed: baseSpeed, damage: baseDmg,
+      xp: 0, level: 1, xpToNext: 10,
+      swordRange: 50 + swordLevel * 2, swordSpeed: 3 + swordLevel * 0.1, swordAngle: 0,
+      invincibleUntil: 0, dashCooldown: 0, dashUntil: 0, hpRegen: 0,
     },
-    enemies: [],
-    particles: [],
-    xpOrbs: [],
-    time: 0,
-    kills: 0,
-    wave: 1,
-    paused: false,
-    gameOver: false,
-    levelUpChoices: null,
-    swordLevel,
-    goldEarned: 0,
-    nextEnemyId: 1,
-    spawnTimer: 0,
-    extraProjectiles: 0,
-    orbitals: 0,
-    thorns: 0,
+    enemies: [], particles: [], xpOrbs: [], damageNumbers: [], projectiles: [],
+    time: 0, kills: 0, wave: 1, prevWave: 1,
+    paused: false, gameOver: false, levelUpChoices: null,
+    swordLevel, goldEarned: 0, nextEnemyId: 1, spawnTimer: 0,
+    extraProjectiles: 0, orbitals: 0, thorns: 0, screenShake: 0,
+    waveAnnouncement: null, projectileTimer: 0, projectileDamage: 0,
+    aoeDamage: 0, aoeTimer: 0, aoeInterval: 180, magnetRange: 40,
+    bossActive: false,
   }
 }
 
-const ENEMY_DEFS: Record<EnemyType, { hp: number; speed: number; damage: number; size: number; color: string }> = {
-  slime: { hp: 10, speed: 1, damage: 5, size: 12, color: '#4ADE80' },
-  bat: { hp: 8, speed: 2.5, damage: 3, size: 8, color: '#A78BFA' },
-  skeleton: { hp: 25, speed: 1.2, damage: 8, size: 14, color: '#F3F4F6' },
-  ghost: { hp: 15, speed: 1.8, damage: 6, size: 10, color: '#93C5FD' },
-  demon: { hp: 60, speed: 0.8, damage: 15, size: 20, color: '#EF4444' },
+const ENEMY_DEFS: Record<EnemyType, { hp: number; speed: number; damage: number; size: number }> = {
+  slime: { hp: 10, speed: 1, damage: 5, size: 12 },
+  bat: { hp: 8, speed: 2.5, damage: 3, size: 8 },
+  skeleton: { hp: 25, speed: 1.2, damage: 8, size: 14 },
+  ghost: { hp: 15, speed: 1.8, damage: 6, size: 10 },
+  demon: { hp: 60, speed: 0.8, damage: 15, size: 20 },
 }
 
 function spawnEnemy(state: ArenaState): Enemy {
@@ -65,7 +50,6 @@ function spawnEnemy(state: ArenaState): Enemy {
   const def = ENEMY_DEFS[type]
   const waveMult = 1 + wave * 0.15
 
-  // Spawn from edges
   const side = Math.floor(Math.random() * 4)
   let x: number, y: number
   if (side === 0) { x = -20; y = Math.random() * ARENA_H }
@@ -74,50 +58,126 @@ function spawnEnemy(state: ArenaState): Enemy {
   else { x = Math.random() * ARENA_W; y = ARENA_H + 20 }
 
   return {
-    id: state.nextEnemyId,
-    pos: { x, y },
-    hp: Math.floor(def.hp * waveMult),
-    maxHp: Math.floor(def.hp * waveMult),
-    speed: def.speed * (1 + wave * 0.02),
-    damage: Math.floor(def.damage * waveMult),
-    size: def.size,
-    type,
-    knockbackUntil: 0,
-    knockbackDir: { x: 0, y: 0 },
+    id: state.nextEnemyId, pos: { x, y },
+    hp: Math.floor(def.hp * waveMult), maxHp: Math.floor(def.hp * waveMult),
+    speed: def.speed * (1 + wave * 0.02), damage: Math.floor(def.damage * waveMult),
+    size: def.size, type,
+    knockbackUntil: 0, knockbackDir: { x: 0, y: 0 },
+    isBoss: false, bossPhase: 0, attackCooldown: 0,
+  }
+}
+
+function spawnBoss(state: ArenaState): Enemy {
+  const wave = state.wave
+  const bossTypes: EnemyType[] = wave < 15 ? ['slime'] : wave < 25 ? ['skeleton'] : ['demon']
+  const type = bossTypes[Math.floor(Math.random() * bossTypes.length)]
+  const waveMult = 1 + wave * 0.2
+
+  return {
+    id: state.nextEnemyId, pos: { x: ARENA_W / 2, y: -40 },
+    hp: Math.floor(200 * waveMult), maxHp: Math.floor(200 * waveMult),
+    speed: 0.6, damage: Math.floor(20 * waveMult),
+    size: 35, type,
+    knockbackUntil: 0, knockbackDir: { x: 0, y: 0 },
+    isBoss: true, bossPhase: 0, attackCooldown: 120,
   }
 }
 
 function spawnParticles(pos: Vec2, color: string, count: number): Particle[] {
   return Array.from({ length: count }, () => ({
-    pos: { ...pos },
-    vel: { x: (Math.random() - 0.5) * 4, y: (Math.random() - 0.5) * 4 },
-    life: 20 + Math.random() * 15,
-    maxLife: 35,
-    color,
-    size: 2 + Math.random() * 3,
+    pos: { ...pos }, vel: { x: (Math.random() - 0.5) * 4, y: (Math.random() - 0.5) * 4 },
+    life: 20 + Math.random() * 15, maxLife: 35, color, size: 2 + Math.random() * 3,
   }))
 }
 
-export function updateGame(state: ArenaState, input: Vec2, dt: number): ArenaState {
-  if (state.gameOver || state.paused || state.levelUpChoices) return state
+function addDmgNum(nums: DamageNumber[], pos: Vec2, value: number, color: string, crit = false) {
+  nums.push({ pos: { x: pos.x + (Math.random() - 0.5) * 10, y: pos.y - 10 }, value: Math.round(value), life: 40, color, crit })
+}
+
+// Exported event flags for sound
+export interface GameEvents {
+  hit: boolean
+  kill: boolean
+  playerDamage: boolean
+  bossSpawn: boolean
+  bossKill: boolean
+  levelUp: boolean
+  dash: boolean
+}
+
+export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput: boolean): { state: ArenaState; events: GameEvents } {
+  const events: GameEvents = { hit: false, kill: false, playerDamage: false, bossSpawn: false, bossKill: false, levelUp: false, dash: false }
+  if (state.gameOver || state.paused || state.levelUpChoices) return { state, events }
 
   const s = { ...state }
   s.time += dt
   s.particles = [...s.particles]
   s.enemies = [...s.enemies]
   s.xpOrbs = [...s.xpOrbs]
+  s.damageNumbers = [...s.damageNumbers]
+  s.projectiles = [...s.projectiles]
 
-  // Player movement
   const p = { ...s.player }
+
+  // Dash
+  if (dashInput && p.dashCooldown <= 0 && p.dashUntil <= 0) {
+    const dir = normalize(input)
+    if (dir.x !== 0 || dir.y !== 0) {
+      p.dashUntil = 8
+      p.dashCooldown = 90 // 1.5s cooldown
+      p.invincibleUntil = Math.max(p.invincibleUntil, s.time + 8)
+      events.dash = true
+      s.particles.push(...spawnParticles(p.pos, '#60A5FA', 5))
+    }
+  }
+  if (p.dashCooldown > 0) p.dashCooldown--
+
+  // Movement
   const dir = normalize(input)
+  const moveSpeed = p.dashUntil > 0 ? p.speed * 3 : p.speed
+  if (p.dashUntil > 0) p.dashUntil--
   p.pos = {
-    x: Math.max(10, Math.min(ARENA_W - 10, p.pos.x + dir.x * p.speed)),
-    y: Math.max(10, Math.min(ARENA_H - 10, p.pos.y + dir.y * p.speed)),
+    x: Math.max(10, Math.min(ARENA_W - 10, p.pos.x + dir.x * moveSpeed)),
+    y: Math.max(10, Math.min(ARENA_H - 10, p.pos.y + dir.y * moveSpeed)),
+  }
+
+  // HP regen
+  if (p.hpRegen > 0 && s.time % 60 === 0) {
+    p.hp = Math.min(p.hp + p.hpRegen, p.maxHp)
   }
 
   // Sword rotation
   p.swordAngle += p.swordSpeed * 0.05
   s.player = p
+
+  // Wave progression (every 30 seconds)
+  s.wave = 1 + Math.floor(s.time / 1800)
+
+  // Wave announcement
+  if (s.wave !== s.prevWave) {
+    s.prevWave = s.wave
+    const isBossWave = s.wave % 5 === 0
+    s.waveAnnouncement = {
+      text: isBossWave ? `⚠️ BOSS WAVE ${s.wave}!` : `Wave ${s.wave}`,
+      life: 90,
+      color: isBossWave ? '#EF4444' : '#FBBF24',
+    }
+
+    // Boss spawn every 5 waves
+    if (isBossWave && !s.bossActive) {
+      s.enemies.push(spawnBoss(s))
+      s.nextEnemyId++
+      s.bossActive = true
+      s.screenShake = 15
+      events.bossSpawn = true
+    }
+  }
+
+  // Wave announcement decay
+  if (s.waveAnnouncement) {
+    s.waveAnnouncement = { ...s.waveAnnouncement, life: s.waveAnnouncement.life - 1 }
+    if (s.waveAnnouncement.life <= 0) s.waveAnnouncement = null
+  }
 
   // Enemy spawning
   s.spawnTimer += dt
@@ -131,11 +191,65 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number): ArenaSta
     }
   }
 
-  // Wave progression (every 30 seconds)
-  s.wave = 1 + Math.floor(s.time / (30 * 60)) // 60fps * 30s
+  // Projectile spawning
+  if (s.projectileDamage > 0) {
+    s.projectileTimer++
+    if (s.projectileTimer >= 40) {
+      s.projectileTimer = 0
+      const target = s.enemies.length > 0
+        ? s.enemies.reduce((closest, e) => dist(e.pos, p.pos) < dist(closest.pos, p.pos) ? e : closest)
+        : null
+      if (target) {
+        const dir = normalize({ x: target.pos.x - p.pos.x, y: target.pos.y - p.pos.y })
+        s.projectiles.push({
+          pos: { ...p.pos }, vel: { x: dir.x * 6, y: dir.y * 6 },
+          damage: s.projectileDamage, life: 60, size: 4, color: '#F59E0B', pierce: 0, hitIds: [],
+        })
+      }
+    }
+  }
 
-  // Enemy movement + collision
-  const now = s.time
+  // AOE damage
+  if (s.aoeDamage > 0) {
+    s.aoeTimer++
+    if (s.aoeTimer >= s.aoeInterval) {
+      s.aoeTimer = 0
+      s.particles.push(...spawnParticles(p.pos, '#EF4444', 8))
+      s.screenShake = 3
+      s.enemies = s.enemies.map(e => {
+        if (dist(e.pos, p.pos) < 80) {
+          const ne = { ...e, hp: e.hp - s.aoeDamage }
+          addDmgNum(s.damageNumbers, e.pos, s.aoeDamage, '#EF4444')
+          return ne
+        }
+        return e
+      })
+    }
+  }
+
+  // Projectile movement + collision
+  s.projectiles = s.projectiles.map(proj => {
+    const pr = { ...proj }
+    pr.pos = { x: pr.pos.x + pr.vel.x, y: pr.pos.y + pr.vel.y }
+    pr.life--
+    // Hit enemies
+    s.enemies = s.enemies.map(e => {
+      if (pr.hitIds.includes(e.id)) return e
+      if (dist(pr.pos, e.pos) < e.size + pr.size) {
+        pr.hitIds = [...pr.hitIds, e.id]
+        const ne = { ...e, hp: e.hp - pr.damage }
+        addDmgNum(s.damageNumbers, e.pos, pr.damage, '#F59E0B')
+        events.hit = true
+        if (pr.pierce <= 0) pr.life = 0
+        else pr.pierce--
+        return ne
+      }
+      return e
+    })
+    return pr
+  }).filter(pr => pr.life > 0 && pr.pos.x > -20 && pr.pos.x < ARENA_W + 20 && pr.pos.y > -20 && pr.pos.y < ARENA_H + 20)
+
+  // Sword hit + enemy AI
   const swordTipX = p.pos.x + Math.cos(p.swordAngle) * p.swordRange
   const swordTipY = p.pos.y + Math.sin(p.swordAngle) * p.swordRange
   const deadEnemyIds: number[] = []
@@ -143,30 +257,47 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number): ArenaSta
   s.enemies = s.enemies.map(e => {
     const enemy = { ...e }
 
-    // Knockback
-    if (enemy.knockbackUntil > now) {
-      enemy.pos = {
-        x: enemy.pos.x + enemy.knockbackDir.x * 5,
-        y: enemy.pos.y + enemy.knockbackDir.y * 5,
-      }
+    if (enemy.knockbackUntil > s.time) {
+      enemy.pos = { x: enemy.pos.x + enemy.knockbackDir.x * 5, y: enemy.pos.y + enemy.knockbackDir.y * 5 }
       return enemy
+    }
+
+    // Boss special attacks
+    if (enemy.isBoss && enemy.attackCooldown > 0) {
+      enemy.attackCooldown--
+      if (enemy.attackCooldown === 0) {
+        // Boss charge toward player
+        enemy.speed = 4
+        enemy.attackCooldown = 180
+        enemy.bossPhase = (enemy.bossPhase + 1) % 3
+        // Spawn minions on phase 2
+        if (enemy.bossPhase === 1) {
+          for (let i = 0; i < 3; i++) {
+            s.enemies.push(spawnEnemy(s))
+            s.nextEnemyId++
+          }
+        }
+        s.screenShake = 8
+      }
+    }
+    if (enemy.isBoss && enemy.speed > 1) {
+      enemy.speed = Math.max(enemy.speed * 0.98, 0.6)
     }
 
     // Move toward player
     const toPlayer = normalize({ x: p.pos.x - enemy.pos.x, y: p.pos.y - enemy.pos.y })
-    enemy.pos = {
-      x: enemy.pos.x + toPlayer.x * enemy.speed,
-      y: enemy.pos.y + toPlayer.y * enemy.speed,
-    }
+    enemy.pos = { x: enemy.pos.x + toPlayer.x * enemy.speed, y: enemy.pos.y + toPlayer.y * enemy.speed }
 
-    // Check sword hit
+    // Sword hit check
     const distToSword = dist(enemy.pos, { x: swordTipX, y: swordTipY })
     if (distToSword < enemy.size + 8) {
       enemy.hp -= p.damage
       const kb = normalize({ x: enemy.pos.x - p.pos.x, y: enemy.pos.y - p.pos.y })
       enemy.knockbackDir = kb
-      enemy.knockbackUntil = now + 10
+      enemy.knockbackUntil = s.time + 10
       s.particles.push(...spawnParticles(enemy.pos, '#FFD700', 3))
+      addDmgNum(s.damageNumbers, enemy.pos, p.damage, '#FFD700')
+      events.hit = true
     }
 
     // Orbital hits
@@ -176,29 +307,39 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number): ArenaSta
       const orbY = p.pos.y + Math.sin(orbAngle) * (p.swordRange * 0.7)
       if (dist(enemy.pos, { x: orbX, y: orbY }) < enemy.size + 6) {
         enemy.hp -= p.damage * 0.3
+        addDmgNum(s.damageNumbers, enemy.pos, p.damage * 0.3, '#A78BFA')
       }
     }
 
-    // Check if dead
+    // Dead check
     if (enemy.hp <= 0) {
       deadEnemyIds.push(enemy.id)
       s.kills++
-      s.goldEarned += Math.ceil(enemy.maxHp * 0.5)
+      const goldReward = enemy.isBoss ? Math.ceil(enemy.maxHp * 2) : Math.ceil(enemy.maxHp * 0.5)
+      s.goldEarned += goldReward
       s.xpOrbs.push({ pos: { ...enemy.pos }, value: Math.ceil(enemy.maxHp * 0.3), life: 300 })
-      s.particles.push(...spawnParticles(enemy.pos, ENEMY_DEFS[enemy.type].color, 6))
+      s.particles.push(...spawnParticles(enemy.pos, enemy.isBoss ? '#FFD700' : '#888', enemy.isBoss ? 15 : 6))
+      if (enemy.isBoss) {
+        events.bossKill = true
+        s.bossActive = false
+        s.screenShake = 20
+        // Boss kill grants level-up
+        s.levelUpChoices = getRandomSkills(3)
+      } else {
+        events.kill = true
+      }
     }
 
-    // Check player collision (damage)
+    // Player collision
     const distToPlayer = dist(enemy.pos, p.pos)
-    if (distToPlayer < enemy.size + 10 && p.invincibleUntil < now) {
+    if (distToPlayer < enemy.size + 10 && p.invincibleUntil < s.time) {
       p.hp -= enemy.damage
-      p.invincibleUntil = now + 30 // 0.5s invincibility
+      p.invincibleUntil = s.time + 30
       s.particles.push(...spawnParticles(p.pos, '#EF4444', 4))
-
-      // Thorns
-      if (s.thorns > 0) {
-        enemy.hp -= s.thorns
-      }
+      s.screenShake = 5
+      addDmgNum(s.damageNumbers, p.pos, enemy.damage, '#EF4444')
+      events.playerDamage = true
+      if (s.thorns > 0) enemy.hp -= s.thorns
     }
 
     return enemy
@@ -207,46 +348,41 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number): ArenaSta
   s.enemies = s.enemies.filter(e => !deadEnemyIds.includes(e.id))
   s.player = p
 
-  // XP orbs collection
+  // XP orb collection
   s.xpOrbs = s.xpOrbs.map(orb => {
-    const o = { ...orb }
-    o.life--
-    if (dist(o.pos, p.pos) < 40) {
-      // Attract toward player
+    const o = { ...orb }; o.life--
+    if (dist(o.pos, p.pos) < s.magnetRange) {
       const toP = normalize({ x: p.pos.x - o.pos.x, y: p.pos.y - o.pos.y })
       o.pos = { x: o.pos.x + toP.x * 6, y: o.pos.y + toP.y * 6 }
     }
-    if (dist(o.pos, p.pos) < 12) {
-      p.xp += o.value
-      o.life = 0
-    }
+    if (dist(o.pos, p.pos) < 12) { p.xp += o.value; o.life = 0 }
     return o
   }).filter(o => o.life > 0)
   s.player = p
 
-  // Level up check
-  if (p.xp >= p.xpToNext) {
+  // Level up
+  if (p.xp >= p.xpToNext && !s.levelUpChoices) {
     p.xp -= p.xpToNext
     p.level++
     p.xpToNext = Math.floor(p.xpToNext * 1.5)
     s.levelUpChoices = getRandomSkills(3)
     s.player = p
+    events.levelUp = true
   }
+
+  // Damage numbers decay
+  s.damageNumbers = s.damageNumbers.map(d => ({ ...d, pos: { x: d.pos.x, y: d.pos.y - 1 }, life: d.life - 1 })).filter(d => d.life > 0)
 
   // Particles
-  s.particles = s.particles.map(pt => ({
-    ...pt,
-    pos: { x: pt.pos.x + pt.vel.x, y: pt.pos.y + pt.vel.y },
-    life: pt.life - 1,
-  })).filter(pt => pt.life > 0)
+  s.particles = s.particles.map(pt => ({ ...pt, pos: { x: pt.pos.x + pt.vel.x, y: pt.pos.y + pt.vel.y }, life: pt.life - 1 })).filter(pt => pt.life > 0)
+
+  // Screen shake decay
+  if (s.screenShake > 0) s.screenShake = Math.max(0, s.screenShake - 0.5)
 
   // Game over
-  if (p.hp <= 0) {
-    s.gameOver = true
-    s.player = { ...p, hp: 0 }
-  }
+  if (p.hp <= 0) { s.gameOver = true; s.player = { ...p, hp: 0 } }
 
-  return s
+  return { state: s, events }
 }
 
 export function applySkill(state: ArenaState, skillIndex: number): ArenaState {
@@ -257,5 +393,7 @@ export function applySkill(state: ArenaState, skillIndex: number): ArenaState {
   skill.apply(p, s)
   s.player = p
   s.levelUpChoices = null
+  // Brief invincibility after skill select
+  s.player.invincibleUntil = Math.max(s.player.invincibleUntil, s.time + 30)
   return s
 }
