@@ -10,6 +10,7 @@ import WeaponSelect from './WeaponSelect'
 import ShopTab from './ShopTab'
 import AchievementsTab from './AchievementsTab'
 import MissionsTab from './MissionsTab'
+import Tutorial from './Tutorial'
 import {
   type GameState,
   type EnhanceResult,
@@ -91,6 +92,7 @@ export default function Game() {
   const [showMagicCircle, setShowMagicCircle] = useState(false)
   const [levelBurst, setLevelBurst] = useState(false)
   const [soundEnabled, setSoundEnabled] = useState(true)
+  const [showTutorial, setShowTutorial] = useState(false)
 
   const stateRef = useRef(state)
   stateRef.current = state
@@ -105,6 +107,7 @@ export default function Game() {
     setState(loadState())
     setMissions(loadMissions())
     setMounted(true)
+    if (!localStorage.getItem('sword-tutorial-done')) setShowTutorial(true)
   }, [])
 
   useEffect(() => { if (mounted) saveState(state) }, [state, mounted])
@@ -317,6 +320,7 @@ export default function Game() {
 
   return (
     <div className="min-h-dvh bg-gray-950 text-white flex flex-col select-none">
+      {showTutorial && <Tutorial onComplete={() => { setShowTutorial(false); localStorage.setItem('sword-tutorial-done', '1') }} />}
       <div className="fixed inset-0 pointer-events-none transition-all duration-1000" style={{ background: `radial-gradient(ellipse at center 35%, ${tier.color}12 0%, transparent 55%)` }} />
       {result === 'destroy' && <div className="fixed inset-0 pointer-events-none z-50 animate-flash-red" />}
       {result === 'success' && <div className="fixed inset-0 pointer-events-none z-50 animate-flash-gold" />}
