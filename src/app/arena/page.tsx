@@ -4,8 +4,27 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import ArenaGame from '@/components/ArenaGame'
 import { INITIAL_STATE, type GameState } from '@/lib/gameLogic'
+import type { ArenaRecord } from '@/lib/arena/types'
 
 const STORAGE_KEY = 'sword-enhance-v2'
+const RECORDS_KEY = 'sword-arena-records'
+
+function loadRecords(): ArenaRecord {
+  try {
+    const raw = localStorage.getItem(RECORDS_KEY)
+    return raw ? JSON.parse(raw) : { highestWave: 0, mostKills: 0, longestSurvival: 0, totalGoldEarned: 0, totalRuns: 0 }
+  } catch { return { highestWave: 0, mostKills: 0, longestSurvival: 0, totalGoldEarned: 0, totalRuns: 0 } }
+}
+
+function updateRecords(wave: number, kills: number, survivalSec: number, gold: number) {
+  const r = loadRecords()
+  r.highestWave = Math.max(r.highestWave, wave)
+  r.mostKills = Math.max(r.mostKills, kills)
+  r.longestSurvival = Math.max(r.longestSurvival, survivalSec)
+  r.totalGoldEarned += gold
+  r.totalRuns++
+  localStorage.setItem(RECORDS_KEY, JSON.stringify(r))
+}
 
 function loadSwordLevel(): number {
   try {
@@ -38,14 +57,17 @@ export default function ArenaPage() {
   const [swordLevel, setSwordLevel] = useState(0)
   const [ready, setReady] = useState(false)
   const [started, setStarted] = useState(false)
+  const [records, setRecords] = useState<ArenaRecord>({ highestWave: 0, mostKills: 0, longestSurvival: 0, totalGoldEarned: 0, totalRuns: 0 })
 
   useEffect(() => {
     setSwordLevel(loadSwordLevel())
+    setRecords(loadRecords())
     setReady(true)
   }, [])
 
-  const handleExit = useCallback((gold: number) => {
+  const handleExit = useCallback((gold: number, wave?: number, kills?: number, time?: number) => {
     if (gold > 0) addGold(gold)
+    if (wave && kills && time) updateRecords(wave, kills, Math.floor(time / 60), gold)
     router.push('/')
   }, [router])
 
@@ -87,7 +109,22 @@ export default function ArenaPage() {
             <p className="text-xs text-gray-500">🖥️ PC: WASD / 방향키로 이동</p>
             <p className="text-xs text-gray-500">📱 모바일: 터치 & 드래그</p>
             <p className="text-xs text-gray-500">⚔️ 검은 자동으로 회전 공격</p>
+            <p className="text-xs text-gray-500">💨 Space/더블탭으로 대시 (무적)</p>
           </div>
+
+          {/* Records */}
+          {records.totalRuns > 0 && (
+            <div className="mt-4 glass-card rounded-xl p-4">
+              <h3 className="text-xs text-gray-400 font-bold mb-2">🏆 최고 기록</h3>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div><span className="text-gray-500">최고 웨이브:</span> <span className="text-yellow-400 font-bold">{records.highestWave}</span></div>
+                <div><span className="text-gray-500">최다 킬:</span> <span className="text-yellow-400 font-bold">{records.mostKills}</span></div>
+                <div><span className="text-gray-500">최장 생존:</span> <span className="text-yellow-400 font-bold">{Math.floor(records.longestSurvival / 60)}m {records.longestSurvival % 60}s</span></div>
+                <div><span className="text-gray-500">총 골드:</span> <span className="text-yellow-400 font-bold">{records.totalGoldEarned.toLocaleString()}G</span></div>
+              </div>
+              <div className="text-center text-[10px] text-gray-600 mt-2">{records.totalRuns}회 도전</div>
+            </div>
+          )}
         </div>
       </div>
     )

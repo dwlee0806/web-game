@@ -308,5 +308,26 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: ArenaState) {
     ctx.shadowBlur = 0; ctx.globalAlpha = 1
   }
 
+  // Mini-map (bottom-left)
+  const mmSize = 80
+  const mmX = 10, mmY = ARENA_H - mmSize - 10
+  ctx.fillStyle = '#0a0a1a80'
+  ctx.fillRect(mmX, mmY, mmSize, mmSize)
+  ctx.strokeStyle = '#333'
+  ctx.lineWidth = 1
+  ctx.strokeRect(mmX, mmY, mmSize, mmSize)
+  // Player dot
+  const ppx = mmX + (p.pos.x / ARENA_W) * mmSize
+  const ppy = mmY + (p.pos.y / ARENA_H) * mmSize
+  ctx.fillStyle = '#FBBF24'
+  ctx.beginPath(); ctx.arc(ppx, ppy, 2, 0, Math.PI * 2); ctx.fill()
+  // Enemy dots
+  enemies.forEach(e => {
+    const ex = mmX + (e.pos.x / ARENA_W) * mmSize
+    const ey = mmY + (e.pos.y / ARENA_H) * mmSize
+    ctx.fillStyle = e.isBoss ? '#EF4444' : '#666'
+    ctx.beginPath(); ctx.arc(ex, ey, e.isBoss ? 3 : 1, 0, Math.PI * 2); ctx.fill()
+  })
+
   ctx.restore() // End screen shake
 }

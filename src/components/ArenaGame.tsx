@@ -8,7 +8,7 @@ import { playArenaHit, playArenaKill, playArenaDamage, playArenaBossAlert, playA
 
 interface ArenaGameProps {
   swordLevel: number
-  onExit: (goldEarned: number) => void
+  onExit: (goldEarned: number, wave?: number, kills?: number, time?: number) => void
 }
 
 export default function ArenaGame({ swordLevel, onExit }: ArenaGameProps) {
@@ -140,7 +140,11 @@ export default function ArenaGame({ swordLevel, onExit }: ArenaGameProps) {
   }, [])
 
   const handleExit = useCallback(() => {
-    onExit(finalState?.goldEarned ?? 0)
+    if (finalState) {
+      onExit(finalState.goldEarned, finalState.wave, finalState.kills, finalState.time)
+    } else {
+      onExit(0)
+    }
   }, [finalState, onExit])
 
   return (
