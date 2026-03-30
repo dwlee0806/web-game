@@ -196,13 +196,14 @@ export default function Game() {
 
     const rawResult = rollEnhance(weaponLevel, wantBless, s.failStack + (s.prestigeBonus ?? 0) * 2)
     const wasDestroyed = rawResult === 'destroy'
-    const r = wasDestroyed && wantProtect ? 'maintain' : rawResult
+    const r: EnhanceResult = wasDestroyed && wantProtect ? 'maintain' : rawResult
 
     setResult(r)
     if (soundRef.current) {
       if (r === 'success') playSuccess()
-      else if (wasDestroyed) playDestroy() // Play destroy sound even if protected
-      else if (r === 'maintain') playMaintain()
+      else if (wasDestroyed) playDestroy()
+      else if (r === 'downgrade') playDestroy()
+      else playMaintain()
     }
     if (r === 'success') {
       setParticleType('success')
@@ -211,11 +212,20 @@ export default function Game() {
     } else if (wasDestroyed && !wantProtect) {
       setParticleType('destroy')
       setTimeout(() => setParticleType(null), 1500)
+    } else if (r === 'downgrade') {
+      setParticleType('destroy')
+      setTimeout(() => setParticleType(null), 1500)
     }
 
     setState(prev => {
       const curLevel = prev.weapons[prev.activeWeapon]?.level ?? prev.level
-      const newLevel = r === 'success' ? curLevel + 1 : rawResult === 'destroy' && !wantProtect ? 0 : curLevel
+      const newLevel = r === 'success'
+        ? curLevel + 1
+        : r === 'downgrade'
+          ? Math.max(0, curLevel - 1)
+          : rawResult === 'destroy' && !wantProtect
+            ? 0
+            : curLevel
       const entry = { from: curLevel, result: r, ts: Date.now(), usedProtection: wantProtect, usedBlessing: wantBless }
       const wep = prev.weapons[prev.activeWeapon] ?? { level: 0, highestLevel: 0 }
       const updatedWeapons = { ...prev.weapons, [prev.activeWeapon]: { level: newLevel, highestLevel: Math.max(wep.highestLevel, newLevel) } }
@@ -253,7 +263,7 @@ export default function Game() {
     if (wantProtect) progressMission(['useprotect'])
     if (wantBless) progressMission(['usebless'])
 
-    const newLevel = r === 'success' ? weaponLevel + 1 : (wasDestroyed && !wantProtect) ? 0 : weaponLevel
+    const newLevel = r === 'success' ? weaponLevel + 1 : r === 'downgrade' ? Math.max(0, weaponLevel - 1) : (wasDestroyed && !wantProtect) ? 0 : weaponLevel
     setMissionLevel('reach5', newLevel)
     setMissionLevel('reach10', newLevel)
   }, [useProtection, useBlessing, awardAchievements, progressMission, resetMissionProgress, setMissionLevel])
@@ -488,7 +498,7 @@ function EnhanceContent({
   onEnhance, onToggleAuto, onToggleProtection, onToggleBlessing, onReset,
 }: {
   state: GameState; tier: { name: string; color: string }
-  rates: { success: number; maintain: number; destroy: number }
+  rates: { success: number; maintain: number; downgrade: number; destroy: number }
   cost: number; canAfford: boolean; maxed: boolean; enhancing: boolean
   result: EnhanceResult | null; autoMode: boolean
   useProtection: boolean; useBlessing: boolean
@@ -527,8 +537,8 @@ function EnhanceContent({
           <div className="text-sm font-bold mt-1 tracking-[0.3em] uppercase text-glow-sm" style={{ color: tier.color }}>{tier.name}</div>
         </div>
         {result && (
-          <div className={`mt-2 text-center text-xl font-black animate-result-in text-glow ${result === 'success' ? 'text-yellow-400' : result === 'maintain' ? 'text-blue-400' : 'text-red-500'}`}>
-            {result === 'success' && '✨ 강화 성공!'}{result === 'maintain' && '😐 유지'}{result === 'destroy' && '💥 파괴!!!'}
+          <div className={`mt-2 text-center text-xl font-black animate-result-in text-glow ${result === 'success' ? 'text-yellow-400' : result === 'downgrade' ? 'text-orange-400' : result === 'maintain' ? 'text-blue-400' : 'text-red-500'}`}>
+            {result === 'success' && '✨ 강화 성공!'}{result === 'maintain' && '😐 유지'}{result === 'downgrade' && '📉 하락!'}{result === 'destroy' && '💥 파괴!!!'}
           </div>
         )}
       </div>
@@ -546,9 +556,10 @@ function EnhanceContent({
                   🔥 페일스택: {state.failStack} (성공률 +{stackBonus.toFixed(1)}%)
                 </div>
               )}
-              <div className="flex gap-2">
-                <RateBox label="성공" value={effectiveSuccess} boosted={blessingBonus > 0} variant="emerald" />
+              <div className="flex gap-1.5">
+                <RateBox label="성공" value={effectiveSuccess} boosted={blessingBonus > 0 || stackBonus > 0} variant="emerald" />
                 <RateBox label="유지" value={rates.maintain} variant="blue" />
+                {rates.downgrade > 0 && <RateBox label="하락" value={rates.downgrade} variant="orange" />}
                 <RateBox label="파괴" value={useProtection && state.protectionScrolls > 0 ? 0 : rates.destroy} variant="red" shielded={useProtection && state.protectionScrolls > 0 && rates.destroy > 0} />
               </div>
             </div>
@@ -574,8 +585,8 @@ function EnhanceContent({
             <div className="text-xs text-gray-500 mb-2">최근 강화 기록</div>
             <div className="flex flex-wrap gap-1">
               {state.enhanceLog.slice(0, 12).map((e, i) => (
-                <span key={i} className={`text-xs px-1.5 py-0.5 rounded ${e.result === 'success' ? 'bg-emerald-900/40 text-emerald-400' : e.result === 'maintain' ? 'bg-blue-900/40 text-blue-400' : 'bg-red-900/40 text-red-400'}`}>
-                  +{e.from}{e.result === 'success' ? '→✨' : e.result === 'maintain' ? '→😐' : '→💥'}
+                <span key={i} className={`text-xs px-1.5 py-0.5 rounded ${e.result === 'success' ? 'bg-emerald-900/40 text-emerald-400' : e.result === 'maintain' ? 'bg-blue-900/40 text-blue-400' : e.result === 'downgrade' ? 'bg-orange-900/40 text-orange-400' : 'bg-red-900/40 text-red-400'}`}>
+                  +{e.from}{e.result === 'success' ? '→✨' : e.result === 'maintain' ? '→😐' : e.result === 'downgrade' ? '→📉' : '→💥'}
                 </span>
               ))}
             </div>
@@ -589,7 +600,7 @@ function EnhanceContent({
             <Stat label="파괴" value={state.totalDestroy} color="text-red-400" />
             <Stat label="유지" value={state.totalMaintain} color="text-blue-400" />
             <Stat label="최고" value={`+${state.highestLevel}`} color="text-yellow-400" />
-            <Stat label="스택" value={state.failStack} color="text-orange-400" />
+            <Stat label="소비" value={`${((state.totalGoldSpent ?? 0) / 1000).toFixed(0)}K`} color="text-gray-400" />
           </div>
         </div>
 
@@ -611,7 +622,7 @@ function EnhanceContent({
 /* ───── Sub-components ───── */
 
 function RateBox({ label, value, variant, boosted, shielded }: { label: string; value: number; variant: string; boosted?: boolean; shielded?: boolean }) {
-  const bg: Record<string, string> = { emerald: 'bg-emerald-900/30 text-emerald-400', blue: 'bg-blue-900/30 text-blue-400', red: 'bg-red-900/30 text-red-400' }
+  const bg: Record<string, string> = { emerald: 'bg-emerald-900/30 text-emerald-400', blue: 'bg-blue-900/30 text-blue-400', orange: 'bg-orange-900/30 text-orange-400', red: 'bg-red-900/30 text-red-400' }
   return (
     <div className={`flex-1 rounded-lg p-2 text-center ${bg[variant]}`}>
       <div className="font-bold">

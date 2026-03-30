@@ -62,18 +62,19 @@ export const INITIAL_STATE: GameState = {
 export const MAX_LEVEL = 30
 export const MAX_LOG = 20
 
-export type EnhanceResult = 'success' | 'maintain' | 'destroy'
+export type EnhanceResult = 'success' | 'maintain' | 'destroy' | 'downgrade'
 
 export function getEnhanceRates(level: number) {
-  if (level < 3) return { success: 95, maintain: 5, destroy: 0 }
-  if (level < 5) return { success: 85, maintain: 15, destroy: 0 }
-  if (level < 7) return { success: 70, maintain: 20, destroy: 10 }
-  if (level < 10) return { success: 55, maintain: 25, destroy: 20 }
-  if (level < 13) return { success: 40, maintain: 30, destroy: 30 }
-  if (level < 16) return { success: 25, maintain: 30, destroy: 45 }
-  if (level < 20) return { success: 15, maintain: 25, destroy: 60 }
-  if (level < 25) return { success: 7, maintain: 18, destroy: 75 }
-  return { success: 3, maintain: 12, destroy: 85 }
+  // downgrade = level -1 (instead of full destroy)
+  if (level < 3) return { success: 95, maintain: 5, downgrade: 0, destroy: 0 }
+  if (level < 5) return { success: 85, maintain: 15, downgrade: 0, destroy: 0 }
+  if (level < 7) return { success: 70, maintain: 20, downgrade: 5, destroy: 5 }
+  if (level < 10) return { success: 55, maintain: 25, downgrade: 10, destroy: 10 }
+  if (level < 13) return { success: 40, maintain: 25, downgrade: 15, destroy: 20 }
+  if (level < 16) return { success: 25, maintain: 25, downgrade: 20, destroy: 30 }
+  if (level < 20) return { success: 15, maintain: 20, downgrade: 25, destroy: 40 }
+  if (level < 25) return { success: 7, maintain: 13, downgrade: 20, destroy: 60 }
+  return { success: 3, maintain: 7, downgrade: 15, destroy: 75 }
 }
 
 export function getEnhanceCost(level: number): number {
@@ -97,6 +98,7 @@ export function rollEnhance(level: number, useBlessing: boolean, failStack: numb
   const roll = Math.random() * 100
   if (roll < successRate) return 'success'
   if (roll < successRate + rates.maintain) return 'maintain'
+  if (roll < successRate + rates.maintain + rates.downgrade) return 'downgrade'
   return 'destroy'
 }
 
