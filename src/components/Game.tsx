@@ -10,6 +10,7 @@ import WeaponSelect from './WeaponSelect'
 import ShopTab from './ShopTab'
 import AchievementsTab from './AchievementsTab'
 import MissionsTab from './MissionsTab'
+import StatsTab from './StatsTab'
 import Tutorial from './Tutorial'
 import BackgroundStars from './BackgroundStars'
 import {
@@ -45,7 +46,7 @@ import {
 
 const STORAGE_KEY = 'sword-enhance-v2'
 const MISSIONS_KEY = 'sword-missions-v1'
-type Tab = 'enhance' | 'shop' | 'achievements' | 'missions'
+type Tab = 'enhance' | 'shop' | 'missions' | 'achievements' | 'stats'
 
 function loadState(): GameState {
   if (typeof window === 'undefined') return INITIAL_STATE
@@ -503,6 +504,7 @@ export default function Game() {
           )}
           {tab === 'missions' && <MissionsTab missions={missions} onClaim={handleClaimMission} />}
           {tab === 'achievements' && <AchievementsTab achieved={state.achievements} />}
+          {tab === 'stats' && <StatsTab state={state} />}
         </div>
 
         <nav className="flex border-t border-gray-800/60 bg-gray-950/90 backdrop-blur">
@@ -511,6 +513,7 @@ export default function Game() {
             { key: 'shop' as Tab, icon: '🏪', label: '상점' },
             { key: 'missions' as Tab, icon: '📋', label: '미션', badge: unclaimedMissions },
             { key: 'achievements' as Tab, icon: '🏆', label: '업적' },
+            { key: 'stats' as Tab, icon: '📊', label: '통계' },
           ]).map(t => (
             <button key={t.key} onClick={() => { setAutoMode(false); setTab(t.key) }} className={`flex-1 py-3 text-center transition-colors relative ${tab === t.key ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>
               <div className="text-lg">{t.icon}</div>
