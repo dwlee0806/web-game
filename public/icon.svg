@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#030712"/>
+  <g transform="translate(156, 40) scale(1.6)">
+    <defs>
+      <linearGradient id="b" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#60A5FA" stop-opacity="0.7"/>
+        <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#60A5FA" stop-opacity="0.7"/>
+      </linearGradient>
+      <linearGradient id="g" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#FFD700"/>
+        <stop offset="100%" stop-color="#B8860B"/>
+      </linearGradient>
+    </defs>
+    <polygon points="62,5 78,145 62,162 46,145" fill="url(#b)" stroke="#60A5FA" stroke-width="1"/>
+    <line x1="62" y1="18" x2="62" y2="145" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+    <rect x="22" y="160" width="80" height="10" rx="3" fill="url(#g)"/>
+    <rect x="50" y="170" width="24" height="40" rx="2" fill="#4A2810"/>
+    <circle cx="62" cy="218" r="10" fill="url(#g)"/>
+    <circle cx="62" cy="218" r="4" fill="#60A5FA" opacity="0.8"/>
+  </g>
+  <text x="256" y="300" text-anchor="middle" font-size="48" font-weight="bold" fill="#FBBF24" font-family="sans-serif">+30</text>
+</svg>

@@ -1,0 +1,13 @@
+{
+  "name": "검 강화 시뮬레이터",
+  "short_name": "검강화",
+  "description": "매일 출석체크하고 검을 강화하세요!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#030712",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

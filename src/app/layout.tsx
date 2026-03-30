@@ -40,12 +40,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
+      <head>
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icon.svg" />
+      </head>
       <body className="bg-gray-950 antialiased">
         {children}
         <footer className="bg-gray-950 border-t border-gray-800/40 py-4 text-center text-xs text-gray-600">
           <div className="flex justify-center gap-4">
             <Link href="/" className="hover:text-gray-400 transition-colors">
               홈
+            </Link>
+            <Link href="/guide" className="hover:text-gray-400 transition-colors">
+              확률표
             </Link>
             <Link href="/about" className="hover:text-gray-400 transition-colors">
               소개
