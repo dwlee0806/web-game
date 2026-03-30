@@ -610,130 +610,101 @@ function EnhanceContent({
   const effectiveSuccess = Math.min(99, rates.success + totalBonus)
 
   return (
-    <div className="flex flex-col items-center">
-      {/* Weapon selector */}
+    <div className="flex flex-col">
+      {/* Weapon select (compact) */}
       <WeaponSelect state={state} onSelect={onSelectWeapon} onUnlock={onUnlockWeapon} />
 
-      <div className="py-4 relative">
+      {/* Sword + Level (compact) */}
+      <div className="flex items-center justify-center gap-4 py-2 relative">
         <Particles type={particleType} />
         <MagicCircle active={showMagicCircle} color={tier.color} />
+        {levelBurst && <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full animate-level-burst" style={{ border: `2px solid ${tier.color}`, boxShadow: `0 0 20px ${tier.color}` }} />}
 
-        {/* Level-up burst ring */}
-        {levelBurst && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full animate-level-burst" style={{ border: `2px solid ${tier.color}`, boxShadow: `0 0 30px ${tier.color}` }} />
-        )}
-
-        <div className={`${enhancing && !result ? 'animate-enhance' : ''} ${result === 'destroy' ? 'animate-shake' : ''} ${!enhancing && state.level > 0 ? 'animate-sword-breathe' : ''}`}>
+        <div className={`shrink-0 ${enhancing && !result ? 'animate-enhance' : ''} ${result === 'destroy' ? 'animate-shake' : ''} ${!enhancing && state.level > 0 ? 'animate-sword-breathe' : ''}`} style={{ transform: 'scale(0.65)', transformOrigin: 'center' }}>
           <Sword level={state.level} color={tier.color} weaponType={state.activeWeapon} specialSkin={state.specialSkin} />
         </div>
-        <div className="mt-2 text-center">
-          <div className={`text-5xl font-black transition-all duration-300 text-glow ${result === 'success' ? 'animate-pop' : ''}`} style={{ color: tier.color }}>+{state.level}</div>
-          <div className="text-sm font-bold mt-1 tracking-[0.3em] uppercase text-glow-sm" style={{ color: tier.color }}>{tier.name}</div>
-        </div>
-        {result && (
-          <div className={`mt-2 text-center text-xl font-black animate-result-in text-glow ${result === 'success' ? 'text-yellow-400' : result === 'downgrade' ? 'text-orange-400' : result === 'maintain' ? 'text-blue-400' : 'text-red-500'}`}>
-            {result === 'success' && '✨ 강화 성공!'}{result === 'maintain' && '😐 유지'}{result === 'downgrade' && '📉 하락!'}{result === 'destroy' && '💥 파괴!!!'}
+
+        <div className="text-center min-w-0">
+          <div className={`text-4xl font-black text-glow ${result === 'success' ? 'animate-pop' : ''}`} style={{ color: tier.color }}>+{state.level}</div>
+          <div className="text-xs font-bold tracking-[0.2em] text-glow-sm" style={{ color: tier.color }}>{tier.name}</div>
+          {/* Progress bar inline */}
+          <div className="mt-1.5 h-1.5 w-28 bg-gray-800 rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${(state.level / 30) * 100}%`, background: `linear-gradient(90deg, ${tier.color}80, ${tier.color})` }} />
           </div>
-        )}
+          {result && (
+            <div className={`mt-1 text-sm font-black animate-result-in text-glow ${result === 'success' ? 'text-yellow-400' : result === 'downgrade' ? 'text-orange-400' : result === 'maintain' ? 'text-blue-400' : 'text-red-500'}`}>
+              {result === 'success' && '✨ 성공!'}{result === 'maintain' && '😐 유지'}{result === 'downgrade' && '📉 하락!'}{result === 'destroy' && '💥 파괴!!!'}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="w-full space-y-3">
+      {/* Controls (always visible, no scroll needed) */}
+      <div className="w-full space-y-2 mt-1">
         {!maxed ? (
           <>
-            {/* Level progress bar */}
+            {/* Rates (compact) */}
             <div className="glass-card rounded-xl p-3">
-              <div className="flex justify-between text-[10px] text-gray-500 mb-1">
-                <span>+0</span>
-                <span>+30</span>
-              </div>
-              <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${(state.level / 30) * 100}%`,
-                    background: `linear-gradient(90deg, ${tier.color}80, ${tier.color})`,
-                    boxShadow: `0 0 8px ${tier.color}60`,
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="glass-card rounded-xl p-4">
-              <div className="flex justify-between text-sm mb-1 text-gray-300">
+              <div className="flex justify-between text-xs mb-1.5 text-gray-400">
                 <span>+{state.level} → +{state.level + 1}</span>
                 <span className="text-yellow-400 font-medium">{cost.toLocaleString()}G</span>
+                {state.failStack > 0 && <span className="text-orange-400">🔥{state.failStack}</span>}
               </div>
-              {state.failStack > 0 && (
-                <div className="text-xs text-orange-400 mb-2">
-                  🔥 페일스택: {state.failStack} (성공률 +{stackBonus.toFixed(1)}%)
-                </div>
-              )}
-              <div className="flex gap-1.5">
-                <RateBox label="성공" value={effectiveSuccess} boosted={blessingBonus > 0 || stackBonus > 0} variant="emerald" />
+              <div className="flex gap-1">
+                <RateBox label="성공" value={effectiveSuccess} boosted={totalBonus > 0} variant="emerald" />
                 <RateBox label="유지" value={rates.maintain} variant="blue" />
                 {rates.downgrade > 0 && <RateBox label="하락" value={rates.downgrade} variant="orange" />}
                 <RateBox label="파괴" value={useProtection && state.protectionScrolls > 0 ? 0 : rates.destroy} variant="red" shielded={useProtection && state.protectionScrolls > 0 && rates.destroy > 0} />
               </div>
             </div>
 
-            <div className="flex gap-2">
+            {/* Item toggles + buttons in 2 rows */}
+            <div className="flex gap-1.5">
               <ItemToggle icon="🛡️" label="보호" count={state.protectionScrolls} active={useProtection && state.protectionScrolls > 0} disabled={state.protectionScrolls === 0} onToggle={onToggleProtection} />
               <ItemToggle icon="✨" label="축복" count={state.blessingScrolls} active={useBlessing && state.blessingScrolls > 0} disabled={state.blessingScrolls === 0} onToggle={onToggleBlessing} />
             </div>
 
-            <button onClick={onEnhance} disabled={enhancing || !canAfford || autoMode} className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${enhancing || autoMode ? 'bg-amber-700/40 cursor-wait' : canAfford ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 active:scale-[0.98] shadow-lg shadow-orange-900/40' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}`}>
+            <button onClick={onEnhance} disabled={enhancing || !canAfford || autoMode} className={`w-full py-3.5 rounded-xl font-bold text-lg transition-all ${enhancing || autoMode ? 'bg-amber-700/40 cursor-wait' : canAfford ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 active:scale-[0.98] shadow-lg shadow-orange-900/40' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}`}>
               {enhancing ? '🔮 강화 중…' : canAfford ? '🔥 강화하기' : '💰 골드 부족'}
             </button>
-            <button onClick={onToggleAuto} disabled={!canAfford && !autoMode} className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${autoMode ? 'bg-red-700 hover:bg-red-600 ring-2 ring-red-400/50 animate-pulse-ring' : canAfford ? 'bg-gray-800 hover:bg-gray-700 text-gray-300' : 'bg-gray-900 text-gray-600 cursor-not-allowed'}`}>
-              {autoMode ? '⏹️ 자동 강화 중지' : '⚡ 자동 강화'}
-            </button>
+
+            <div className="flex gap-2">
+              <button onClick={onToggleAuto} disabled={!canAfford && !autoMode} className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition-all ${autoMode ? 'bg-red-700 hover:bg-red-600 ring-2 ring-red-400/50 animate-pulse-ring' : canAfford ? 'bg-gray-800 hover:bg-gray-700 text-gray-300' : 'bg-gray-900 text-gray-600 cursor-not-allowed'}`}>
+                {autoMode ? '⏹️ 자동 중지' : '⚡ 자동 강화'}
+              </button>
+              <button onClick={onToggleSound} className={`px-3 py-2.5 rounded-xl text-xs transition-colors ${soundEnabled ? 'bg-gray-800 text-gray-300' : 'bg-gray-900 text-gray-600'}`} aria-label="Toggle sound">
+                {soundEnabled ? '🔊' : '🔇'}
+              </button>
+            </div>
           </>
         ) : (
-          <div className="text-center py-6 text-yellow-400 text-xl font-black animate-pulse">🏆 최고 레벨 달성!</div>
+          <div className="text-center py-4 text-yellow-400 text-xl font-black animate-pulse">🏆 최고 레벨!</div>
         )}
 
+        {/* Log (compact) */}
         {state.enhanceLog.length > 0 && (
-          <div className="bg-gray-900/50 rounded-xl p-3 border border-gray-800/30">
-            <div className="text-xs text-gray-500 mb-2">최근 강화 기록</div>
-            <div className="flex flex-wrap gap-1">
-              {state.enhanceLog.slice(0, 12).map((e, i) => (
-                <span key={i} className={`text-xs px-1.5 py-0.5 rounded ${e.result === 'success' ? 'bg-emerald-900/40 text-emerald-400' : e.result === 'maintain' ? 'bg-blue-900/40 text-blue-400' : e.result === 'downgrade' ? 'bg-orange-900/40 text-orange-400' : 'bg-red-900/40 text-red-400'}`}>
-                  +{e.from}{e.result === 'success' ? '→✨' : e.result === 'maintain' ? '→😐' : e.result === 'downgrade' ? '→📉' : '→💥'}
-                </span>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-0.5 px-1">
+            {state.enhanceLog.slice(0, 8).map((e, i) => (
+              <span key={i} className={`text-[10px] px-1 py-0.5 rounded ${e.result === 'success' ? 'bg-emerald-900/30 text-emerald-400' : e.result === 'maintain' ? 'bg-blue-900/30 text-blue-400' : e.result === 'downgrade' ? 'bg-orange-900/30 text-orange-400' : 'bg-red-900/30 text-red-400'}`}>
+                +{e.from}{e.result === 'success' ? '✨' : e.result === 'maintain' ? '😐' : e.result === 'downgrade' ? '📉' : '💥'}
+              </span>
+            ))}
           </div>
         )}
 
-        <div className="bg-gray-900/60 backdrop-blur rounded-xl p-4 border border-gray-800/40">
-          <div className="grid grid-cols-3 gap-y-3 text-sm text-center">
-            <Stat label="시도" value={state.totalAttempts} />
-            <Stat label="성공" value={state.totalSuccess} color="text-emerald-400" />
-            <Stat label="파괴" value={state.totalDestroy} color="text-red-400" />
-            <Stat label="유지" value={state.totalMaintain} color="text-blue-400" />
-            <Stat label="최고" value={`+${state.highestLevel}`} color="text-yellow-400" />
-            <Stat label="소비" value={`${((state.totalGoldSpent ?? 0) / 1000).toFixed(0)}K`} color="text-gray-400" />
-          </div>
-        </div>
-
-        {/* Arena entry */}
-        <a
-          href="/arena"
-          className="block w-full py-3 rounded-xl bg-gradient-to-r from-red-700 to-orange-700 hover:from-red-600 hover:to-orange-600 font-bold text-sm text-center transition-all active:scale-[0.98]"
-        >
-          🗡️ 전장 입장 — 검으로 몬스터 사냥!
+        {/* Arena CTA — prominent */}
+        <a href="/arena" className="block w-full py-3 rounded-xl bg-gradient-to-r from-red-700 via-red-600 to-orange-600 hover:from-red-600 hover:to-orange-500 font-bold text-center transition-all active:scale-[0.98] shadow-lg shadow-red-900/30">
+          <span className="text-base">🗡️ 전장으로!</span>
+          <span className="block text-[10px] text-red-200/70 mt-0.5">몬스터를 사냥하고 골드를 얻으세요</span>
         </a>
 
-        <AdBanner className="my-2 min-h-[100px] rounded-xl overflow-hidden" />
-
-        <ShareButton state={state} />
+        <AdBanner className="min-h-[80px] rounded-xl overflow-hidden" />
 
         <div className="flex gap-2">
-          <button onClick={onToggleSound} className={`flex-1 py-2 rounded-lg text-xs transition-colors ${soundEnabled ? 'bg-gray-800 text-gray-300' : 'bg-gray-900 text-gray-600'}`}>
-            {soundEnabled ? '🔊 사운드 ON' : '🔇 사운드 OFF'}
-          </button>
-          <button onClick={onReset} className="flex-1 py-2 rounded-lg text-xs text-gray-600 hover:text-gray-400 bg-gray-900 transition-colors">초기화</button>
+          <ShareButton state={state} />
         </div>
+
+        <button onClick={onReset} className="w-full py-1.5 text-[10px] text-gray-700 hover:text-gray-500 transition-colors">데이터 초기화</button>
       </div>
     </div>
   )

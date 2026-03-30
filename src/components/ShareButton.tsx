@@ -48,7 +48,9 @@ export default function ShareButton({ state }: { state: GameState }) {
         a.click()
         URL.revokeObjectURL(url)
       }
-    } catch { /* */ }
+    } catch (err) {
+      alert('카드 생성에 실패했습니다: ' + (err instanceof Error ? err.message : '알 수 없는 오류'))
+    }
     setGenerating(false)
   }, [state])
 

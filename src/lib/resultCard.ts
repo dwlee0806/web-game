@@ -29,7 +29,19 @@ export async function generateResultCard(state: GameState): Promise<Blob> {
   // Border
   c.strokeStyle = tier.color + '40'
   c.lineWidth = 2
-  c.roundRect(10, 10, 580, 380, 16)
+  // Border (roundRect fallback for older browsers)
+  const r = 16, bx = 10, by = 10, bw = 580, bh = 380
+  c.beginPath()
+  c.moveTo(bx + r, by)
+  c.lineTo(bx + bw - r, by)
+  c.arcTo(bx + bw, by, bx + bw, by + r, r)
+  c.lineTo(bx + bw, by + bh - r)
+  c.arcTo(bx + bw, by + bh, bx + bw - r, by + bh, r)
+  c.lineTo(bx + r, by + bh)
+  c.arcTo(bx, by + bh, bx, by + bh - r, r)
+  c.lineTo(bx, by + r)
+  c.arcTo(bx, by, bx + r, by, r)
+  c.closePath()
   c.stroke()
 
   // Title
