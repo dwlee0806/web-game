@@ -583,6 +583,24 @@ function EnhanceContent({
       <div className="w-full space-y-3">
         {!maxed ? (
           <>
+            {/* Level progress bar */}
+            <div className="glass-card rounded-xl p-3">
+              <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                <span>+0</span>
+                <span>+30</span>
+              </div>
+              <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${(state.level / 30) * 100}%`,
+                    background: `linear-gradient(90deg, ${tier.color}80, ${tier.color})`,
+                    boxShadow: `0 0 8px ${tier.color}60`,
+                  }}
+                />
+              </div>
+            </div>
+
             <div className="glass-card rounded-xl p-4">
               <div className="flex justify-between text-sm mb-1 text-gray-300">
                 <span>+{state.level} → +{state.level + 1}</span>
