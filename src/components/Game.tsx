@@ -36,6 +36,7 @@ import {
 import { type Achievement, getNewAchievements } from '@/lib/achievements'
 import { playEnhanceStart, playSuccess, playMaintain, playDestroy, playCheckIn, playBuy, playAchievement, playClick } from '@/lib/sounds'
 import { WEAPONS } from '@/lib/weapons'
+import { getActiveEvents, getSuccessBoost, getCostDiscount } from '@/lib/events'
 import {
   type DailyMissionState,
   getInitialMissionState,
@@ -188,13 +189,16 @@ export default function Game() {
     // Bug fix: use weapon level, not state.level (which may be stale after weapon switch)
     const weaponLevel = s.weapons[s.activeWeapon]?.level ?? s.level
     if (weaponLevel >= MAX_LEVEL) return
-    const cost = getEnhanceCost(weaponLevel)
+    const baseCost = getEnhanceCost(weaponLevel)
+    const discount = getCostDiscount()
+    const cost = Math.max(1, Math.floor(baseCost * (1 - discount / 100)))
     if (s.gold < cost) { setAutoMode(false); return }
 
     const wantProtect = useProtection && s.protectionScrolls > 0
     const wantBless = useBlessing && s.blessingScrolls > 0
+    const eventBoost = getSuccessBoost()
 
-    const rawResult = rollEnhance(weaponLevel, wantBless, s.failStack + (s.prestigeBonus ?? 0) * 2)
+    const rawResult = rollEnhance(weaponLevel, wantBless, s.failStack + (s.prestigeBonus ?? 0) * 2 + eventBoost * 2)
     const wasDestroyed = rawResult === 'destroy'
     const r: EnhanceResult = wasDestroyed && wantProtect ? 'maintain' : rawResult
 
@@ -426,6 +430,20 @@ export default function Game() {
           )}
         </header>
 
+        {/* Active events banner */}
+        {mounted && getActiveEvents().length > 0 && (
+          <div className="px-4 pb-2">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+              {getActiveEvents().map(e => (
+                <div key={e.id} className="shrink-0 glass-card rounded-lg px-2.5 py-1.5 flex items-center gap-1.5">
+                  <span className="text-sm">{e.icon}</span>
+                  <span className="text-[10px] text-gray-300 whitespace-nowrap">{e.name}: {e.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto px-4 pb-4">
           {tab === 'enhance' && (
             <EnhanceContent
@@ -511,7 +529,9 @@ function EnhanceContent({
 }) {
   const blessingBonus = useBlessing && state.blessingScrolls > 0 ? 10 : 0
   const stackBonus = getFailStackBonus(state.failStack)
-  const effectiveSuccess = Math.min(99, rates.success + blessingBonus + stackBonus)
+  const eventBonus = getSuccessBoost()
+  const totalBonus = blessingBonus + stackBonus + eventBonus + (state.prestigeBonus ?? 0)
+  const effectiveSuccess = Math.min(99, rates.success + totalBonus)
 
   const weaponDef = WEAPONS.find(w => w.id === state.activeWeapon)
 
