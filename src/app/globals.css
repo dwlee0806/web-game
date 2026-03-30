@@ -232,3 +232,30 @@ html {
 .animate-energy-orbit { animation: energy-orbit linear infinite; }
 .animate-spark-rise { animation: spark-rise ease-out infinite; }
 .animate-tier-flash { animation: tier-flash 0.8s ease-out forwards; }
+
+/* ── Village NPCs + Clouds ── */
+
+@keyframes npc-walk-right {
+  0% { left: -5%; }
+  100% { left: 105%; }
+}
+
+@keyframes npc-walk-left {
+  0% { left: 105%; }
+  100% { left: -5%; }
+}
+
+@keyframes npc-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes cloud-drift {
+  0% { transform: translateX(-120px); }
+  100% { transform: translateX(calc(100vw + 120px)); }
+}
+
+.animate-npc-walk-right { animation: npc-walk-right linear infinite; }
+.animate-npc-walk-left { animation: npc-walk-left linear infinite; }
+.animate-npc-bounce { animation: npc-bounce ease-in-out infinite; }
+.animate-cloud { animation: cloud-drift linear infinite; }

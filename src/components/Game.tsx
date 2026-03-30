@@ -451,7 +451,7 @@ export default function Game() {
   }).length
 
   return (
-    <div className="min-h-dvh bg-gray-950 text-white flex flex-col select-none">
+    <div className="min-h-dvh bg-gray-950 lg:bg-gray-950/90 text-white flex flex-col select-none relative z-10">
       {showTutorial && <Tutorial onComplete={() => { setShowTutorial(false); localStorage.setItem('sword-tutorial-done', '1') }} />}
       <BackgroundStars level={state.level} color={tier.color} />
       <div className="fixed inset-0 pointer-events-none transition-all duration-1000" style={{ background: `radial-gradient(ellipse at center 35%, ${tier.color}12 0%, transparent 55%)` }} />
