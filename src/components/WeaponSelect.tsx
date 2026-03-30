@@ -1,6 +1,6 @@
 'use client'
 
-import { WEAPONS, type WeaponDef } from '@/lib/weapons'
+import { WEAPONS } from '@/lib/weapons'
 import type { GameState } from '@/lib/gameLogic'
 import { getLevelTier } from '@/lib/gameLogic'
 

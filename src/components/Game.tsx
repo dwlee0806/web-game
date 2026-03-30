@@ -53,7 +53,14 @@ function loadState(): GameState {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) {
       const v1 = localStorage.getItem('sword-enhance-v1')
-      if (v1) return { ...INITIAL_STATE, ...JSON.parse(v1) }
+      if (v1) {
+        const old = JSON.parse(v1)
+        return {
+          ...INITIAL_STATE,
+          ...old,
+          weapons: { sword: { level: old.level ?? 0, highestLevel: old.highestLevel ?? 0 } },
+        }
+      }
       return INITIAL_STATE
     }
     return { ...INITIAL_STATE, ...JSON.parse(raw) }
@@ -160,16 +167,28 @@ export default function Game() {
     })
   }, [])
 
+  const achQueueRef = useRef<Achievement[]>([])
+
   const awardAchievements = useCallback((s: GameState): GameState => {
     const fresh = getNewAchievements(s)
     if (fresh.length === 0) return s
     const ids = fresh.map(a => a.id)
     const bonus = fresh.reduce((sum, a) => sum + a.reward, 0)
-    setAchPopup(fresh[0])
-    if (soundRef.current) playAchievement()
-    setTimeout(() => setAchPopup(null), 2500)
+    // Queue popups outside setState to avoid StrictMode double-invocation issues
+    achQueueRef.current = [...achQueueRef.current, ...fresh]
     return { ...s, achievements: [...s.achievements, ...ids], gold: s.gold + bonus }
   }, [])
+
+  // Process achievement popup queue
+  useEffect(() => {
+    if (achQueueRef.current.length === 0 || achPopup) return
+    const next = achQueueRef.current[0]
+    achQueueRef.current = achQueueRef.current.slice(1)
+    setAchPopup(next)
+    if (soundRef.current) playAchievement()
+    const t = setTimeout(() => setAchPopup(null), 2500)
+    return () => clearTimeout(t)
+  }, [achPopup, state])
 
   const handleCheckIn = useCallback(() => {
     if (!canCheckIn(stateRef.current.lastCheckIn)) return
@@ -532,8 +551,6 @@ function EnhanceContent({
   const eventBonus = getSuccessBoost()
   const totalBonus = blessingBonus + stackBonus + eventBonus + (state.prestigeBonus ?? 0)
   const effectiveSuccess = Math.min(99, rates.success + totalBonus)
-
-  const weaponDef = WEAPONS.find(w => w.id === state.activeWeapon)
 
   return (
     <div className="flex flex-col items-center">

@@ -11,7 +11,7 @@ export default function MagicCircle({ active, color }: { active: boolean; color:
         height="240"
         viewBox="0 0 240 240"
         className="absolute animate-magic-circle"
-        style={{ top: '50%', left: '50%' }}
+        style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
       >
         <defs>
           <filter id="mc-glow">

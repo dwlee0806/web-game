@@ -8,6 +8,7 @@ interface SwordProps {
   weaponType?: string
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default memo(function Sword({ level, color, weaponType = 'sword' }: SwordProps) {
   const glow = Math.min(level * 3, 60)
   const bladeColor = level > 0 ? color : '#8B9DAF'

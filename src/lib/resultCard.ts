@@ -85,5 +85,7 @@ export async function generateResultCard(state: GameState): Promise<Blob> {
   c.textAlign = 'center'
   c.fillText('web-game-6cy.pages.dev', 300, 385)
 
-  return new Promise(resolve => canvas.toBlob(blob => resolve(blob!), 'image/png'))
+  return new Promise((resolve, reject) =>
+    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob failed')), 'image/png'),
+  )
 }
