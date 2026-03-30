@@ -451,10 +451,27 @@ export default function Game() {
   }).length
 
   return (
-    <div className="min-h-dvh bg-gray-950 lg:bg-gray-950/90 text-white flex flex-col select-none relative z-10">
+    <div className="h-dvh bg-gray-950 lg:bg-transparent text-white flex flex-col select-none relative z-10 overflow-hidden">
       {showTutorial && <Tutorial onComplete={() => { setShowTutorial(false); localStorage.setItem('sword-tutorial-done', '1') }} />}
       <BackgroundStars level={state.level} color={tier.color} />
-      <div className="fixed inset-0 pointer-events-none transition-all duration-1000" style={{ background: `radial-gradient(ellipse at center 35%, ${tier.color}12 0%, transparent 55%)` }} />
+
+      {/* Center panel backdrop with side fade */}
+      <div className="fixed inset-0 pointer-events-none z-[1] hidden lg:block">
+        <div className="absolute inset-0 flex justify-center">
+          <div className="relative w-full max-w-lg">
+            {/* Left fade */}
+            <div className="absolute -left-32 top-0 bottom-0 w-32" style={{ background: 'linear-gradient(to right, transparent, rgba(3,7,18,0.85))' }} />
+            {/* Center dark */}
+            <div className="absolute inset-0" style={{ backgroundColor: 'rgba(3,7,18,0.82)' }} />
+            {/* Right fade */}
+            <div className="absolute -right-32 top-0 bottom-0 w-32" style={{ background: 'linear-gradient(to left, transparent, rgba(3,7,18,0.85))' }} />
+          </div>
+        </div>
+      </div>
+      {/* Mobile full dark bg */}
+      <div className="fixed inset-0 pointer-events-none z-[1] lg:hidden bg-gray-950" />
+
+      <div className="fixed inset-0 pointer-events-none transition-all duration-1000 z-[2]" style={{ background: `radial-gradient(ellipse at center 35%, ${tier.color}12 0%, transparent 55%)` }} />
       {result === 'destroy' && <div className="fixed inset-0 pointer-events-none z-50 animate-flash-red" />}
       {result === 'success' && <div className="fixed inset-0 pointer-events-none z-50 animate-flash-gold" />}
 
@@ -471,7 +488,7 @@ export default function Game() {
         </div>
       )}
 
-      <div className="relative z-10 flex flex-col flex-1 max-w-md mx-auto w-full">
+      <div className="relative z-20 flex flex-col flex-1 max-w-md mx-auto w-full">
         <header className="px-4 pt-5 pb-2">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-lg font-bold text-gray-300">⚔️ {t('title', locale)}</h1>
@@ -519,66 +536,79 @@ export default function Game() {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
-          {tab === 'enhance' && (
-            <EnhanceContent
-              state={state} tier={tier} rates={rates} cost={cost} canAfford={canAfford} maxed={maxed}
-              enhancing={enhancing} result={result} autoMode={autoMode}
-              useProtection={useProtection} useBlessing={useBlessing} particleType={particleType}
-              showMagicCircle={showMagicCircle} levelBurst={levelBurst}
-              soundEnabled={soundEnabled} onToggleSound={() => setSoundEnabled(s => !s)}
-              onEnhance={handleEnhance} onToggleAuto={() => setAutoMode(a => !a)}
-              onToggleProtection={() => { setUseProtection(p => !p); if (soundEnabled) playClick() }}
-              onToggleBlessing={() => { setUseBlessing(b => !b); if (soundEnabled) playClick() }}
-              onSelectWeapon={handleSelectWeapon} onUnlockWeapon={handleUnlockWeapon}
-              onReset={handleReset}
-            />
-          )}
-          {tab === 'shop' && (
-            <div className="space-y-4">
-              <ShopTab gold={state.gold} protectionScrolls={state.protectionScrolls} blessingScrolls={state.blessingScrolls} onBuy={handleBuy} />
-              {/* Prestige section */}
-              <div className="glass-card rounded-xl p-4">
-                <h3 className="text-sm font-bold text-purple-400 mb-2">⭐ 환생 (프레스티지)</h3>
-                <p className="text-xs text-gray-400 mb-3">레벨과 무기를 초기화하고 영구 보너스를 획득합니다.</p>
-                {canPrestige(state.highestLevel) ? (
-                  <>
-                    <div className="text-xs text-gray-300 mb-2 space-y-1">
-                      <p>획득 포인트: <span className="text-purple-400 font-bold">+{getPrestigePoints(state.highestLevel)}</span></p>
-                      <p>현재 보너스: 성공률 +{(state.prestigeBonus ?? 0).toFixed(1)}% / 골드 x{(1 + (state.prestige ?? 0) * 0.1).toFixed(1)}</p>
-                    </div>
-                    <button onClick={handlePrestige} className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 font-bold text-sm transition-all active:scale-[0.98]">
-                      ⭐ 환생하기
-                    </button>
-                  </>
-                ) : (
-                  <p className="text-xs text-gray-600">+10 이상 달성 시 환생 가능</p>
-                )}
-              </div>
-            </div>
-          )}
-          {tab === 'missions' && <MissionsTab missions={missions} onClaim={handleClaimMission} />}
-          {tab === 'achievements' && <AchievementsTab achieved={state.achievements} />}
-          {tab === 'stats' && <StatsTab state={state} />}
+        {/* Main enhance view (always visible, fits 1 screen) */}
+        <div className="flex-1 overflow-hidden px-4 pb-2 flex flex-col">
+          <EnhanceContent
+            state={state} tier={tier} rates={rates} cost={cost} canAfford={canAfford} maxed={maxed}
+            enhancing={enhancing} result={result} autoMode={autoMode}
+            useProtection={useProtection} useBlessing={useBlessing} particleType={particleType}
+            showMagicCircle={showMagicCircle} levelBurst={levelBurst}
+            soundEnabled={soundEnabled} onToggleSound={() => setSoundEnabled(s => !s)}
+            onEnhance={handleEnhance} onToggleAuto={() => setAutoMode(a => !a)}
+            onToggleProtection={() => { setUseProtection(p => !p); if (soundEnabled) playClick() }}
+            onToggleBlessing={() => { setUseBlessing(b => !b); if (soundEnabled) playClick() }}
+            onSelectWeapon={handleSelectWeapon} onUnlockWeapon={handleUnlockWeapon}
+            onReset={handleReset}
+          />
         </div>
 
-        <nav className="flex border-t border-gray-800/60 bg-gray-950/90 backdrop-blur">
+        {/* Bottom quick-access bar */}
+        <nav className="flex border-t border-gray-800/40 bg-gray-950/80 backdrop-blur-sm">
           {([
-            { key: 'enhance' as Tab, icon: '⚔️', label: t('tab_enhance', locale) },
             { key: 'shop' as Tab, icon: '🏪', label: t('tab_shop', locale) },
             { key: 'missions' as Tab, icon: '📋', label: t('tab_missions', locale), badge: unclaimedMissions },
             { key: 'achievements' as Tab, icon: '🏆', label: t('tab_achievements', locale) },
             { key: 'stats' as Tab, icon: '📊', label: t('tab_stats', locale) },
-          ]).map(t => (
-            <button key={t.key} onClick={() => { setAutoMode(false); setTab(t.key) }} className={`flex-1 py-3 text-center transition-colors relative ${tab === t.key ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>
-              <div className="text-lg">{t.icon}</div>
-              <div className="text-[11px] mt-0.5">{t.label}</div>
-              {t.badge != null && t.badge > 0 && (
-                <span className="absolute top-1.5 right-1/4 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{t.badge}</span>
+          ]).map(tb => (
+            <button key={tb.key} onClick={() => { setAutoMode(false); setTab(tab === tb.key ? 'enhance' : tb.key) }} className={`flex-1 py-2.5 text-center transition-colors relative ${tab === tb.key ? 'text-white bg-gray-800/50' : 'text-gray-500 hover:text-gray-300'}`}>
+              <div className="text-base">{tb.icon}</div>
+              <div className="text-[9px] mt-0.5">{tb.label}</div>
+              {tb.badge != null && tb.badge > 0 && (
+                <span className="absolute top-1 right-1/4 bg-red-500 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">{tb.badge}</span>
               )}
             </button>
           ))}
         </nav>
+
+        {/* Side panel overlay */}
+        {tab !== 'enhance' && (
+          <div className="fixed inset-0 z-30 flex items-end justify-center" onClick={() => setTab('enhance')}>
+            <div className="absolute inset-0 bg-black/50" />
+            <div className="relative w-full max-w-md bg-gray-950 rounded-t-2xl max-h-[70vh] overflow-y-auto border-t border-gray-700/50" style={{ overscrollBehavior: 'contain' }} onClick={e => e.stopPropagation()}>
+              <div className="sticky top-0 bg-gray-950/95 backdrop-blur-sm border-b border-gray-800/40 px-4 py-3 flex items-center justify-between z-10">
+                <h2 className="font-bold text-sm">
+                  {tab === 'shop' && '🏪 상점'}
+                  {tab === 'missions' && '📋 미션'}
+                  {tab === 'achievements' && '🏆 업적'}
+                  {tab === 'stats' && '📊 통계'}
+                </h2>
+                <button onClick={() => setTab('enhance')} className="text-gray-500 hover:text-white text-lg" aria-label="Close">✕</button>
+              </div>
+              <div className="p-4">
+                {tab === 'shop' && (
+                  <div className="space-y-4">
+                    <ShopTab gold={state.gold} protectionScrolls={state.protectionScrolls} blessingScrolls={state.blessingScrolls} onBuy={handleBuy} />
+                    <div className="glass-card rounded-xl p-4">
+                      <h3 className="text-sm font-bold text-purple-400 mb-2">⭐ 환생</h3>
+                      {canPrestige(state.highestLevel) ? (
+                        <>
+                          <p className="text-xs text-gray-300 mb-2">포인트 +{getPrestigePoints(state.highestLevel)} / 성공률 +{(state.prestigeBonus ?? 0).toFixed(1)}%</p>
+                          <button onClick={handlePrestige} className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 font-bold text-sm transition-all active:scale-[0.98]">환생하기</button>
+                        </>
+                      ) : <p className="text-xs text-gray-600">+10 이상 달성 시 가능</p>}
+                    </div>
+                    <AdBanner className="min-h-[80px] rounded-xl overflow-hidden" />
+                    <ShareButton state={state} />
+                    <button onClick={handleReset} className="w-full py-1.5 text-[10px] text-gray-700 hover:text-gray-500">데이터 초기화</button>
+                  </div>
+                )}
+                {tab === 'missions' && <MissionsTab missions={missions} onClaim={handleClaimMission} />}
+                {tab === 'achievements' && <AchievementsTab achieved={state.achievements} />}
+                {tab === 'stats' && <StatsTab state={state} />}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -699,14 +729,6 @@ function EnhanceContent({
           <span className="text-base">🗡️ 전장으로!</span>
           <span className="block text-[10px] text-red-200/70 mt-0.5">몬스터를 사냥하고 골드를 얻으세요</span>
         </a>
-
-        <AdBanner className="min-h-[80px] rounded-xl overflow-hidden" />
-
-        <div className="flex gap-2">
-          <ShareButton state={state} />
-        </div>
-
-        <button onClick={onReset} className="w-full py-1.5 text-[10px] text-gray-700 hover:text-gray-500 transition-colors">데이터 초기화</button>
       </div>
     </div>
   )
