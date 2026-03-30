@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+/* ── Base resets (Web Interface Guidelines) ── */
+
+html {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Tabular nums for all numbers */
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ── Core game animations ── */
 
 @keyframes float-up {

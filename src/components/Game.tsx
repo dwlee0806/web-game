@@ -682,7 +682,7 @@ function EnhanceContent({
             </div>
 
             <button onClick={onEnhance} disabled={enhancing || !canAfford || autoMode} className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${enhancing || autoMode ? 'bg-amber-700/40 cursor-wait' : canAfford ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 active:scale-[0.98] shadow-lg shadow-orange-900/40' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}`}>
-              {enhancing ? '🔮 강화 중...' : canAfford ? '🔥 강화하기' : '💰 골드 부족'}
+              {enhancing ? '🔮 강화 중…' : canAfford ? '🔥 강화하기' : '💰 골드 부족'}
             </button>
             <button onClick={onToggleAuto} disabled={!canAfford && !autoMode} className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${autoMode ? 'bg-red-700 hover:bg-red-600 ring-2 ring-red-400/50 animate-pulse-ring' : canAfford ? 'bg-gray-800 hover:bg-gray-700 text-gray-300' : 'bg-gray-900 text-gray-600 cursor-not-allowed'}`}>
               {autoMode ? '⏹️ 자동 강화 중지' : '⚡ 자동 강화'}

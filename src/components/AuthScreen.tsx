@@ -73,6 +73,7 @@ export default function AuthScreen({ onAuth, onGuest }: AuthScreenProps) {
                 onChange={e => setId(e.target.value)}
                 placeholder="영문, 숫자, _ (2~20자)"
                 autoComplete="username"
+                spellCheck={false}
                 className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-gray-700/50 text-white placeholder-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
               />
             </div>
@@ -106,7 +107,7 @@ export default function AuthScreen({ onAuth, onGuest }: AuthScreenProps) {
               disabled={loading || !id.trim() || !password}
               className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '처리 중...' : mode === 'register' ? '계정 만들기' : '로그인'}
+              {loading ? '처리 중…' : mode === 'register' ? '계정 만들기' : '로그인'}
             </button>
           </form>
         </div>

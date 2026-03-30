@@ -65,7 +65,7 @@ export default function ShareButton({ state }: { state: GameState }) {
         disabled={generating}
         className="flex-1 py-3 rounded-xl bg-violet-600/70 hover:bg-violet-500/70 text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50"
       >
-        {generating ? '생성중...' : '🖼️ 카드 저장'}
+        {generating ? '생성중…' : '🖼️ 카드 저장'}
       </button>
     </div>
   )
