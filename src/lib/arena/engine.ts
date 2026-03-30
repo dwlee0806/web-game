@@ -1,4 +1,4 @@
-import type { ArenaState, Player, Enemy, EnemyType, Vec2, Particle, XpOrb, DamageNumber, Projectile } from './types'
+import type { ArenaState, Player, Enemy, EnemyType, Vec2, Particle, XpOrb, DamageNumber, Projectile, HealDrop } from './types'
 import { ARENA_W, ARENA_H } from './types'
 import { getRandomSkills } from './skills'
 
@@ -32,6 +32,7 @@ export function createInitialState(swordLevel: number): ArenaState {
     waveAnnouncement: null, projectileTimer: 0, projectileDamage: 0,
     aoeDamage: 0, aoeTimer: 0, aoeInterval: 180, magnetRange: 40,
     bossActive: false,
+    combo: 0, comboTimer: 0, hitstop: 0, healDrops: [],
   }
 }
 
@@ -109,6 +110,9 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
   const events: GameEvents = { hit: false, kill: false, playerDamage: false, bossSpawn: false, bossKill: false, levelUp: false, dash: false }
   if (state.gameOver || state.paused || state.levelUpChoices) return { state, events }
 
+  // Hitstop: freeze frames for impact feel
+  if (state.hitstop > 0) return { state: { ...state, hitstop: state.hitstop - 1 }, events }
+
   const s = { ...state }
   s.time += dt
   s.particles = [...s.particles]
@@ -116,6 +120,7 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
   s.xpOrbs = [...s.xpOrbs]
   s.damageNumbers = [...s.damageNumbers]
   s.projectiles = [...s.projectiles]
+  s.healDrops = [...s.healDrops]
 
   const p = { ...s.player }
 
@@ -315,16 +320,28 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
     if (enemy.hp <= 0) {
       deadEnemyIds.push(enemy.id)
       s.kills++
-      const goldReward = enemy.isBoss ? Math.ceil(enemy.maxHp * 2) : Math.ceil(enemy.maxHp * 0.5)
+      // Combo system
+      s.combo++
+      s.comboTimer = 120 // 2 seconds
+      const comboMultiplier = 1 + Math.min(s.combo, 50) * 0.02
+      const goldReward = enemy.isBoss ? Math.ceil(enemy.maxHp * 2) : Math.ceil(enemy.maxHp * 0.5 * comboMultiplier)
       s.goldEarned += goldReward
       s.xpOrbs.push({ pos: { ...enemy.pos }, value: Math.ceil(enemy.maxHp * 0.3), life: 300 })
       s.particles.push(...spawnParticles(enemy.pos, enemy.isBoss ? '#FFD700' : '#888', enemy.isBoss ? 15 : 6))
+      // Hitstop on kill (brief freeze frame)
+      if (!enemy.isBoss) s.hitstop = 2
+      // Heal drop (8% chance)
+      if (Math.random() < 0.08) {
+        s.healDrops.push({ pos: { ...enemy.pos }, value: Math.ceil(p.maxHp * 0.15), life: 600 })
+      }
       if (enemy.isBoss) {
         events.bossKill = true
         s.bossActive = false
         s.screenShake = 20
-        // Boss kill grants level-up
+        s.hitstop = 8
         s.levelUpChoices = getRandomSkills(3)
+        // Boss always drops heal
+        s.healDrops.push({ pos: { ...enemy.pos }, value: Math.ceil(p.maxHp * 0.4), life: 600 })
       } else {
         events.kill = true
       }
@@ -368,6 +385,32 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
     s.levelUpChoices = getRandomSkills(3)
     s.player = p
     events.levelUp = true
+  }
+
+  // Combo timer
+  if (s.comboTimer > 0) { s.comboTimer--; if (s.comboTimer <= 0) s.combo = 0 }
+
+  // Heal drops
+  s.healDrops = s.healDrops.map(h => {
+    const hd = { ...h }; hd.life--
+    if (dist(hd.pos, p.pos) < 20) {
+      p.hp = Math.min(p.hp + hd.value, p.maxHp)
+      s.particles.push(...spawnParticles(hd.pos, '#4ADE80', 4))
+      addDmgNum(s.damageNumbers, hd.pos, hd.value, '#4ADE80')
+      hd.life = 0
+    }
+    return hd
+  }).filter(h => h.life > 0)
+  s.player = p
+
+  // Sword auto-aim: bias rotation toward nearest enemy
+  if (s.enemies.length > 0) {
+    const nearest = s.enemies.reduce((c, e) => dist(e.pos, p.pos) < dist(c.pos, p.pos) ? e : c)
+    const targetAngle = Math.atan2(nearest.pos.y - p.pos.y, nearest.pos.x - p.pos.x)
+    const diff = targetAngle - p.swordAngle
+    const wrapped = Math.atan2(Math.sin(diff), Math.cos(diff))
+    p.swordAngle += wrapped * 0.03 // Gentle auto-aim bias
+    s.player = p
   }
 
   // Damage numbers decay

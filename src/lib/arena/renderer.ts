@@ -154,6 +154,16 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: ArenaState) {
   for (let x = 0; x < ARENA_W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ARENA_H); ctx.stroke() }
   for (let y = 0; y < ARENA_H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(ARENA_W, y); ctx.stroke() }
 
+  // Heal drops
+  state.healDrops.forEach(h => {
+    ctx.globalAlpha = Math.min(h.life / 60, 1)
+    ctx.fillStyle = '#4ADE80'
+    ctx.shadowColor = '#4ADE80'; ctx.shadowBlur = 10
+    ctx.font = '16px sans-serif'; ctx.textAlign = 'center'
+    ctx.fillText('💚', h.pos.x, h.pos.y + 5)
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1
+  })
+
   // XP orbs
   xpOrbs.forEach(orb => {
     ctx.globalAlpha = Math.min(orb.life / 30, 1)
@@ -275,6 +285,16 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: ArenaState) {
   ctx.fillStyle = '#FFF'; ctx.font = 'bold 12px sans-serif'
   ctx.fillText(`${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, '0')} | Wave ${state.wave} | ${state.kills} kills`, ARENA_W - 10, 22)
   ctx.fillStyle = '#FBBF24'; ctx.fillText(`💰 ${state.goldEarned}G`, ARENA_W - 10, 40)
+
+  // Combo counter
+  if (state.combo >= 3) {
+    ctx.textAlign = 'center'
+    ctx.fillStyle = state.combo >= 20 ? '#EF4444' : state.combo >= 10 ? '#F59E0B' : '#FBBF24'
+    ctx.font = `bold ${16 + Math.min(state.combo, 30)}px sans-serif`
+    ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 10
+    ctx.fillText(`${state.combo} COMBO!`, ARENA_W / 2, ARENA_H - 30)
+    ctx.shadowBlur = 0
+  }
 
   // Wave announcement
   if (state.waveAnnouncement) {

@@ -118,6 +118,16 @@ export interface ArenaState {
   aoeInterval: number
   magnetRange: number
   bossActive: boolean
+  combo: number
+  comboTimer: number
+  hitstop: number
+  healDrops: HealDrop[]
+}
+
+export interface HealDrop {
+  pos: Vec2
+  value: number
+  life: number
 }
 
 export const ARENA_W = 800
