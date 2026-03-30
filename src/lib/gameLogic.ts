@@ -27,6 +27,8 @@ export interface GameState {
   enhanceLog: EnhanceLogEntry[]
   activeWeapon: string
   weapons: Record<string, WeaponData>
+  failStack: number
+  maxFailStack: number
 }
 
 export const INITIAL_STATE: GameState = {
@@ -45,6 +47,8 @@ export const INITIAL_STATE: GameState = {
   enhanceLog: [],
   activeWeapon: 'sword',
   weapons: { sword: { level: 0, highestLevel: 0 } },
+  failStack: 0,
+  maxFailStack: 0,
 }
 
 export const MAX_LEVEL = 30
@@ -76,15 +80,20 @@ export function getEnhanceCost(level: number): number {
   return 50000
 }
 
-export function rollEnhance(level: number, useBlessing: boolean): EnhanceResult {
+export function rollEnhance(level: number, useBlessing: boolean, failStack: number = 0): EnhanceResult {
   const rates = getEnhanceRates(level)
-  const bonus = useBlessing ? 10 : 0
-  const successRate = Math.min(99, rates.success + bonus)
+  const blessingBonus = useBlessing ? 10 : 0
+  const stackBonus = Math.min(failStack * 0.5, 30)
+  const successRate = Math.min(99, rates.success + blessingBonus + stackBonus)
 
   const roll = Math.random() * 100
   if (roll < successRate) return 'success'
   if (roll < successRate + rates.maintain) return 'maintain'
   return 'destroy'
+}
+
+export function getFailStackBonus(failStack: number): number {
+  return Math.min(failStack * 0.5, 30)
 }
 
 export function getCheckInReward(streak: number): number {

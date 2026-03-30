@@ -11,6 +11,7 @@ import ShopTab from './ShopTab'
 import AchievementsTab from './AchievementsTab'
 import MissionsTab from './MissionsTab'
 import Tutorial from './Tutorial'
+import BackgroundStars from './BackgroundStars'
 import {
   type GameState,
   type EnhanceResult,
@@ -26,6 +27,7 @@ import {
   canCheckIn,
   isStreakContinued,
   getLevelTier,
+  getFailStackBonus,
 } from '@/lib/gameLogic'
 import { type Achievement, getNewAchievements } from '@/lib/achievements'
 import { playEnhanceStart, playSuccess, playMaintain, playDestroy, playCheckIn, playBuy, playAchievement, playClick } from '@/lib/sounds'
@@ -172,7 +174,7 @@ export default function Game() {
     const wantProtect = useProtection && s.protectionScrolls > 0
     const wantBless = useBlessing && s.blessingScrolls > 0
 
-    let r = rollEnhance(s.level, wantBless)
+    let r = rollEnhance(s.level, wantBless, s.failStack)
     if (r === 'destroy' && wantProtect) r = 'maintain'
 
     setResult(r)
@@ -209,6 +211,8 @@ export default function Game() {
         blessingScrolls: prev.blessingScrolls - (wantBless ? 1 : 0),
         enhanceLog: [entry, ...prev.enhanceLog.slice(0, MAX_LOG - 1)],
         weapons: updatedWeapons,
+        failStack: r === 'success' ? 0 : prev.failStack + 1,
+        maxFailStack: Math.max(prev.maxFailStack, r === 'success' ? prev.failStack : prev.failStack + 1),
       }
       return awardAchievements(updated)
     })
@@ -321,6 +325,7 @@ export default function Game() {
   return (
     <div className="min-h-dvh bg-gray-950 text-white flex flex-col select-none">
       {showTutorial && <Tutorial onComplete={() => { setShowTutorial(false); localStorage.setItem('sword-tutorial-done', '1') }} />}
+      <BackgroundStars level={state.level} color={tier.color} />
       <div className="fixed inset-0 pointer-events-none transition-all duration-1000" style={{ background: `radial-gradient(ellipse at center 35%, ${tier.color}12 0%, transparent 55%)` }} />
       {result === 'destroy' && <div className="fixed inset-0 pointer-events-none z-50 animate-flash-red" />}
       {result === 'success' && <div className="fixed inset-0 pointer-events-none z-50 animate-flash-gold" />}
@@ -414,7 +419,8 @@ function EnhanceContent({
   onSelectWeapon: (id: string) => void; onUnlockWeapon: (id: string) => void; onReset: () => void
 }) {
   const blessingBonus = useBlessing && state.blessingScrolls > 0 ? 10 : 0
-  const effectiveSuccess = Math.min(99, rates.success + blessingBonus)
+  const stackBonus = getFailStackBonus(state.failStack)
+  const effectiveSuccess = Math.min(99, rates.success + blessingBonus + stackBonus)
 
   const weaponDef = WEAPONS.find(w => w.id === state.activeWeapon)
 
@@ -450,10 +456,15 @@ function EnhanceContent({
         {!maxed ? (
           <>
             <div className="glass-card rounded-xl p-4">
-              <div className="flex justify-between text-sm mb-3 text-gray-300">
+              <div className="flex justify-between text-sm mb-1 text-gray-300">
                 <span>+{state.level} → +{state.level + 1}</span>
                 <span className="text-yellow-400 font-medium">{cost.toLocaleString()}G</span>
               </div>
+              {state.failStack > 0 && (
+                <div className="text-xs text-orange-400 mb-2">
+                  🔥 페일스택: {state.failStack} (성공률 +{stackBonus.toFixed(1)}%)
+                </div>
+              )}
               <div className="flex gap-2">
                 <RateBox label="성공" value={effectiveSuccess} boosted={blessingBonus > 0} variant="emerald" />
                 <RateBox label="유지" value={rates.maintain} variant="blue" />
@@ -497,7 +508,7 @@ function EnhanceContent({
             <Stat label="파괴" value={state.totalDestroy} color="text-red-400" />
             <Stat label="유지" value={state.totalMaintain} color="text-blue-400" />
             <Stat label="최고" value={`+${state.highestLevel}`} color="text-yellow-400" />
-            <Stat label="출석" value={`${state.checkInStreak}일`} />
+            <Stat label="스택" value={state.failStack} color="text-orange-400" />
           </div>
         </div>
 
