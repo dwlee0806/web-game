@@ -15,6 +15,7 @@ import HeroGuide, { type GuideStep } from './HeroGuide'
 import HeroAvatar from './HeroAvatar'
 import BackgroundStars from './BackgroundStars'
 import SwordEffects from './SwordEffects'
+import GlobalFeed from './GlobalFeed'
 import EnhanceGauge from './EnhanceGauge'
 import AuthScreen from './AuthScreen'
 import { getCurrentUser, logout, getUserSaveKey, getUserMissionKey } from '@/lib/auth'
@@ -599,7 +600,10 @@ export default function Game() {
       )}
 
       <div className="relative z-20 flex flex-col flex-1 max-w-md mx-auto w-full">
-        <header className="px-4 pt-5 pb-2">
+        {/* Global feed ticker */}
+        <div className="px-4 pt-2"><GlobalFeed /></div>
+
+        <header className="px-4 pt-2 pb-2">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-lg font-bold text-gray-300">⚔️ {t('title', locale)}</h1>
             {userId ? (

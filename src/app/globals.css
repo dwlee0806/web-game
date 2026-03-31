@@ -335,6 +335,17 @@ html {
 .animate-hero-bounce { animation: hero-bounce 1s ease-in-out infinite; }
 .animate-guide-pulse { animation: guide-pulse 1.5s ease-in-out infinite; }
 
+/* ── Global feed ticker ── */
+
+@keyframes feed-slide {
+  0% { opacity: 0; transform: translateY(10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+.animate-feed-slide { animation: feed-slide 6s ease-in-out forwards; }
+
 /* ── Sword shatter (destroy) ── */
 
 @keyframes sword-shatter-left {
