@@ -117,6 +117,7 @@ export interface ArenaState {
   aoeInterval: number
   magnetRange: number
   bossActive: boolean
+  mapTransition: number // 0 = none, >0 = transition progress (0-1)
   combo: number
   comboTimer: number
   hitstop: number

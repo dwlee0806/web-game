@@ -1,16 +1,20 @@
 import type { ArenaState, Enemy } from './types'
 import { ARENA_W, ARENA_H } from './types'
+import { getMapTheme, drawMapTransition, drawFogOfWar } from './mapThemes'
 
 const ENEMY_COLORS: Record<string, string> = {
   slime: '#4ADE80', bat: '#A78BFA', skeleton: '#E5E7EB', ghost: '#93C5FD', demon: '#EF4444',
 }
 
-function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy, time: number) {
+function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy, time: number, playerX: number = 0) {
   const color = ENEMY_COLORS[e.type] ?? '#888'
   const isKB = e.knockbackUntil > time
+  // Face toward player (left/right flip)
+  const facingLeft = playerX < e.pos.x
 
   ctx.save()
   ctx.translate(e.pos.x, e.pos.y)
+  if (facingLeft) ctx.scale(-1, 1)
   if (isKB) { ctx.shadowColor = '#FFF'; ctx.shadowBlur = 12 }
 
   const s = e.isBoss ? 1.8 : 1
@@ -144,13 +148,19 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: ArenaState) {
     ctx.translate(sx, sy)
   }
 
-  // Clear
-  ctx.fillStyle = '#0a0a1a'
+  // Map theme based on wave
+  const theme = getMapTheme(state.wave)
+
+  // Clear with theme color
+  ctx.fillStyle = theme.bgColor
   ctx.fillRect(-10, -10, ARENA_W + 20, ARENA_H + 20)
 
-  // Grid
-  ctx.strokeStyle = '#1a1a2e'
-  ctx.lineWidth = 1
+  // Theme background
+  theme.drawBackground(ctx, state.time)
+
+  // Grid (subtle, theme-colored)
+  ctx.strokeStyle = theme.gridColor
+  ctx.lineWidth = 0.5
   for (let x = 0; x < ARENA_W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ARENA_H); ctx.stroke() }
   for (let y = 0; y < ARENA_H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(ARENA_W, y); ctx.stroke() }
 
@@ -182,7 +192,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: ArenaState) {
   })
 
   // Enemies
-  enemies.forEach(e => drawEnemy(ctx, e, state.time))
+  enemies.forEach(e => drawEnemy(ctx, e, state.time, p.pos.x))
 
   // Particles
   particles.forEach(pt => {
@@ -396,4 +406,14 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: ArenaState) {
   })
 
   ctx.restore() // End screen shake
+
+  // Fog of war (wave 21+)
+  if (theme.fogOfWar && theme.fogRadius) {
+    drawFogOfWar(ctx, p.pos.x, p.pos.y, theme.fogRadius, state.time)
+  }
+
+  // Map transition overlay
+  if (state.mapTransition > 0) {
+    drawMapTransition(ctx, state.mapTransition)
+  }
 }

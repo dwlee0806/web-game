@@ -31,7 +31,7 @@ export function createInitialState(swordLevel: number): ArenaState {
     armorStacks: 0, goldBoostStacks: 0, orbitals: 0, thorns: 0, screenShake: 0,
     waveAnnouncement: null, projectileTimer: 0, projectileDamage: 0,
     aoeDamage: 0, aoeTimer: 0, aoeInterval: 180, magnetRange: 40,
-    bossActive: false,
+    bossActive: false, mapTransition: 0,
     combo: 0, comboTimer: 0, hitstop: 0, healDrops: [],
   }
 }
@@ -164,14 +164,21 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
   // Wave progression (every 30 seconds)
   s.wave = 1 + Math.floor(s.time / 1800)
 
-  // Wave announcement
+  // Wave announcement + map transition
   if (s.wave !== s.prevWave) {
     s.prevWave = s.wave
     const isBossWave = s.wave % 5 === 0
+    const isMapChange = [6, 11, 16, 21].includes(s.wave)
+
     s.waveAnnouncement = {
-      text: isBossWave ? `⚠️ BOSS WAVE ${s.wave}!` : `Wave ${s.wave}`,
-      life: 90,
-      color: isBossWave ? '#EF4444' : '#FBBF24',
+      text: isBossWave ? `⚠️ BOSS WAVE ${s.wave}!` : isMapChange ? `🗺️ 새로운 지역!` : `Wave ${s.wave}`,
+      life: isMapChange ? 120 : 90,
+      color: isBossWave ? '#EF4444' : isMapChange ? '#4FC3F7' : '#FBBF24',
+    }
+
+    // Map transition on stage boundaries
+    if (isMapChange) {
+      s.mapTransition = 0.01 // Start transition
     }
 
     // Boss spawn every 5 waves
@@ -182,6 +189,12 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
       s.screenShake = 15
       events.bossSpawn = true
     }
+  }
+
+  // Map transition progress
+  if (s.mapTransition > 0 && s.mapTransition < 1) {
+    s.mapTransition = Math.min(1, s.mapTransition + 0.015) // ~1.1 seconds
+    if (s.mapTransition >= 1) s.mapTransition = 0
   }
 
   // Wave announcement decay
