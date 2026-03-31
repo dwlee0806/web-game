@@ -114,7 +114,7 @@ export async function register(id: string, password: string): Promise<{ ok: bool
   if (password.length < 4 || password.length > 128) return { ok: false, error: '비밀번호는 4~128자' }
 
   const store = loadAccounts()
-  if (store.accounts.some(a => a.id === cleanId)) {
+  if (store.accounts.some(a => a.id.toLowerCase() === cleanId.toLowerCase())) {
     return { ok: false, error: '이미 존재하는 ID입니다.' }
   }
 
