@@ -21,9 +21,9 @@ export const metadata: Metadata = {
     title: '검 강화 시뮬레이터',
     description: '매일 출석체크하고 검을 강화하세요! 성공? 파괴? 당신의 운을 시험하세요.',
     type: 'website',
-    url: 'https://web-game-6cy.pages.dev',
+    url: 'https://forgd.io',
   },
-  metadataBase: new URL('https://web-game-6cy.pages.dev'),
+  metadataBase: new URL('https://forgd.io'),
   alternates: { canonical: '/' },
 }
 

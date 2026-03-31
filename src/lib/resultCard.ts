@@ -95,7 +95,7 @@ export async function generateResultCard(state: GameState): Promise<Blob> {
   c.font = '13px sans-serif'
   c.fillStyle = '#4B5563'
   c.textAlign = 'center'
-  c.fillText('web-game-6cy.pages.dev', 300, 385)
+  c.fillText('forgd.io', 300, 385)
 
   return new Promise((resolve, reject) =>
     canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob failed')), 'image/png'),

@@ -23,7 +23,7 @@ export default function ShareButton({ state }: { state: GameState }) {
       `💀 파괴 ${state.totalDestroy}회`,
       ``,
       `나도 도전 👇`,
-      `https://web-game-6cy.pages.dev`,
+      `https://forgd.io`,
     ].join('\n')
 
     if (navigator.share) {

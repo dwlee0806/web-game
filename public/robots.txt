@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://web-game-6cy.pages.dev/sitemap.xml
+Sitemap: https://forgd.io/sitemap.xml
