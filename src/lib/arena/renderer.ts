@@ -183,12 +183,37 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: ArenaState) {
     ctx.shadowBlur = 0; ctx.globalAlpha = 1
   })
 
-  // Projectiles
+  // Projectiles (weapon-specific visuals)
   projectiles.forEach(pr => {
-    ctx.fillStyle = pr.color
-    ctx.shadowColor = pr.color; ctx.shadowBlur = 6
-    ctx.beginPath(); ctx.arc(pr.pos.x, pr.pos.y, pr.size, 0, Math.PI * 2); ctx.fill()
-    ctx.shadowBlur = 0
+    const angle = Math.atan2(pr.vel.y, pr.vel.x)
+    if (pr.color === '#DAA520' && pr.size <= 4) {
+      // Arrow: elongated triangle
+      ctx.save(); ctx.translate(pr.pos.x, pr.pos.y); ctx.rotate(angle)
+      ctx.fillStyle = '#8B6914'
+      ctx.fillRect(-8, -1, 16, 2) // shaft
+      ctx.fillStyle = '#A0A8B0'
+      ctx.beginPath(); ctx.moveTo(8, 0); ctx.lineTo(4, -3); ctx.lineTo(4, 3); ctx.fill() // head
+      ctx.fillStyle = '#E04040'
+      ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(-5, -2); ctx.lineTo(-5, 2); ctx.fill() // fletching
+      ctx.restore()
+    } else if (pr.color === '#FF6B00') {
+      // Fireball: glowing circle with trail
+      ctx.fillStyle = '#FF8C00'; ctx.shadowColor = '#FF6B00'; ctx.shadowBlur = 12
+      ctx.beginPath(); ctx.arc(pr.pos.x, pr.pos.y, pr.size, 0, Math.PI * 2); ctx.fill()
+      ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(pr.pos.x, pr.pos.y, pr.size * 0.5, 0, Math.PI * 2); ctx.fill()
+      // Fire trail
+      for (let i = 1; i <= 3; i++) {
+        ctx.globalAlpha = 0.3 - i * 0.08
+        ctx.fillStyle = '#FF4500'
+        ctx.beginPath(); ctx.arc(pr.pos.x - pr.vel.x * i * 0.5, pr.pos.y - pr.vel.y * i * 0.5, pr.size * (1 - i * 0.2), 0, Math.PI * 2); ctx.fill()
+      }
+      ctx.globalAlpha = 1; ctx.shadowBlur = 0
+    } else {
+      // Default orb
+      ctx.fillStyle = pr.color; ctx.shadowColor = pr.color; ctx.shadowBlur = 6
+      ctx.beginPath(); ctx.arc(pr.pos.x, pr.pos.y, pr.size, 0, Math.PI * 2); ctx.fill()
+      ctx.shadowBlur = 0
+    }
   })
 
   // Enemies
@@ -258,8 +283,43 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: ArenaState) {
 
   ctx.restore()
 
-  // ═══ WEAPON SLASH MOTION ═══
-  // swingPhase: 0=raised/ready, 0.01→1=fast slash down, 1→0=slow raise back up
+  // ═══ WEAPON ATTACK RENDERING ═══
+  const isRangedWeapon = state.weaponType === 'bow' || state.weaponType === 'staff'
+
+  if (isRangedWeapon) {
+    // Ranged: show aim line toward nearest enemy instead of melee slash
+    const aimAngle = p.swordAngle
+    const aimLen = 25
+    const aimX = p.pos.x + Math.cos(aimAngle) * aimLen
+    const aimY = p.pos.y + Math.sin(aimAngle) * aimLen
+
+    if (state.weaponType === 'bow') {
+      // Draw bow in hand
+      ctx.strokeStyle = '#8B6914'; ctx.lineWidth = 2
+      const bowAngle = aimAngle + Math.PI / 2
+      ctx.beginPath()
+      ctx.arc(p.pos.x + Math.cos(aimAngle) * 8, p.pos.y + Math.sin(aimAngle) * 8, 10, bowAngle - 1.2, bowAngle + 1.2)
+      ctx.stroke()
+      // Aim dot
+      ctx.fillStyle = '#FF000060'; ctx.beginPath(); ctx.arc(aimX, aimY, 2, 0, Math.PI * 2); ctx.fill()
+    } else {
+      // Staff: orb glow at tip
+      const orbX = p.pos.x + Math.cos(aimAngle) * 14
+      const orbY = p.pos.y + Math.sin(aimAngle) * 14
+      ctx.fillStyle = '#8B5CF6'; ctx.shadowColor = '#8B5CF6'; ctx.shadowBlur = 8
+      ctx.beginPath(); ctx.arc(orbX, orbY, 4, 0, Math.PI * 2); ctx.fill()
+      ctx.fillStyle = '#D0A0FF'; ctx.beginPath(); ctx.arc(orbX, orbY, 2, 0, Math.PI * 2); ctx.fill()
+      ctx.shadowBlur = 0
+      // Staff shaft
+      ctx.strokeStyle = '#5A3A20'; ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(p.pos.x, p.pos.y)
+      ctx.lineTo(orbX, orbY)
+      ctx.stroke()
+    }
+  } else {
+
+  // ═══ MELEE SLASH MOTION (sword/axe) ═══
   const sp = p.swingPhase
   const isSlashing = sp > 0.05 && sp < 0.95
 
@@ -345,6 +405,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: ArenaState) {
   } else {
     ctx.fillStyle = '#DDD'; ctx.beginPath(); ctx.arc(tipX, tipY, 2, 0, Math.PI * 2); ctx.fill()
   }
+  } // end melee else block
 
   // Orbitals
   for (let o = 0; o < state.orbitals; o++) {

@@ -11,7 +11,7 @@ function normalize(v: Vec2): Vec2 {
   return d > 0 ? { x: v.x / d, y: v.y / d } : { x: 0, y: 0 }
 }
 
-export function createInitialState(swordLevel: number): ArenaState {
+export function createInitialState(swordLevel: number, weaponType: string = 'sword'): ArenaState {
   const baseDmg = 5 + swordLevel * 2
   const baseHp = 50 + swordLevel * 5
   const baseSpeed = 3 + swordLevel * 0.1
@@ -27,7 +27,7 @@ export function createInitialState(swordLevel: number): ArenaState {
     enemies: [], particles: [], xpOrbs: [], damageNumbers: [], projectiles: [],
     time: 0, kills: 0, wave: 1, prevWave: 1,
     paused: false, gameOver: false, levelUpChoices: null,
-    swordLevel, goldEarned: 0, nextEnemyId: 1, spawnTimer: 0,
+    swordLevel, weaponType, goldEarned: 0, nextEnemyId: 1, spawnTimer: 0,
     armorStacks: 0, goldBoostStacks: 0, orbitals: 0, thorns: 0, screenShake: 0,
     waveAnnouncement: null, projectileTimer: 0, projectileDamage: 0,
     aoeDamage: 0, aoeTimer: 0, aoeInterval: 180, magnetRange: 40,
@@ -234,20 +234,38 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
     }
   }
 
-  // Projectile spawning
-  if (s.projectileDamage > 0) {
+  // Projectile spawning — weapon-type based + skill upgrades
+  const isRanged = s.weaponType === 'bow' || s.weaponType === 'staff'
+  const baseProjectileDmg = isRanged ? p.damage : s.projectileDamage
+  if (baseProjectileDmg > 0) {
     s.projectileTimer++
-    if (s.projectileTimer >= 40) {
+    const fireRate = s.weaponType === 'bow' ? Math.max(15, 30 - p.swordSpeed) : s.weaponType === 'staff' ? Math.max(25, 45 - p.swordSpeed) : 40
+    if (s.projectileTimer >= fireRate) {
       s.projectileTimer = 0
       const target = s.enemies.length > 0
         ? s.enemies.reduce((closest, e) => dist(e.pos, p.pos) < dist(closest.pos, p.pos) ? e : closest)
         : null
       if (target) {
         const dir = normalize({ x: target.pos.x - p.pos.x, y: target.pos.y - p.pos.y })
-        s.projectiles.push({
-          pos: { ...p.pos }, vel: { x: dir.x * 6, y: dir.y * 6 },
-          damage: s.projectileDamage, life: 60, size: 4, color: '#F59E0B', pierce: 0, hitIds: [],
-        })
+        if (s.weaponType === 'bow') {
+          // Arrow: fast, small, can pierce with upgrades
+          s.projectiles.push({
+            pos: { ...p.pos }, vel: { x: dir.x * 9, y: dir.y * 9 },
+            damage: baseProjectileDmg, life: 50, size: 3, color: '#DAA520', pierce: s.projectileDamage, hitIds: [],
+          })
+        } else if (s.weaponType === 'staff') {
+          // Fireball: slower, bigger, splash (handled in collision)
+          s.projectiles.push({
+            pos: { ...p.pos }, vel: { x: dir.x * 5, y: dir.y * 5 },
+            damage: Math.floor(baseProjectileDmg * 1.5), life: 80, size: 8, color: '#FF6B00', pierce: 0, hitIds: [],
+          })
+        } else {
+          // Skill-acquired projectiles for melee weapons
+          s.projectiles.push({
+            pos: { ...p.pos }, vel: { x: dir.x * 6, y: dir.y * 6 },
+            damage: s.projectileDamage, life: 60, size: 4, color: '#F59E0B', pierce: 0, hitIds: [],
+          })
+        }
       }
     }
   }
@@ -378,7 +396,7 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
         s.bossActive = false
         s.screenShake = 20
         s.hitstop = 8
-        s.levelUpChoices = getRandomSkills(3)
+        s.levelUpChoices = getRandomSkills(3, s.weaponType)
         // Boss always drops heal
         s.healDrops.push({ pos: { ...enemy.pos }, value: Math.ceil(p.maxHp * 0.4), life: 600 })
       } else {
@@ -422,7 +440,7 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
     p.xp -= p.xpToNext
     p.level++
     p.xpToNext = Math.floor(p.xpToNext * 1.5)
-    s.levelUpChoices = getRandomSkills(3)
+    s.levelUpChoices = getRandomSkills(3, s.weaponType)
     s.player = p
     events.levelUp = true
   }

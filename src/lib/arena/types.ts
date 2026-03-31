@@ -103,6 +103,7 @@ export interface ArenaState {
   gameOver: boolean
   levelUpChoices: Skill[] | null
   swordLevel: number
+  weaponType: string // 'sword' | 'bow' | 'staff' | 'axe'
   goldEarned: number
   nextEnemyId: number
   spawnTimer: number

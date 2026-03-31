@@ -29,12 +29,20 @@ function updateRecords(wave: number, kills: number, survivalSec: number, gold: n
 export default function ArenaPage() {
   const router = useRouter()
   const [swordLevel, setSwordLevel] = useState(0)
+  const [weaponType, setWeaponType] = useState('sword')
   const [ready, setReady] = useState(false)
   const [started, setStarted] = useState(false)
   const [records, setRecords] = useState<ArenaRecord>({ highestWave: 0, mostKills: 0, longestSurvival: 0, totalGoldEarned: 0, totalRuns: 0 })
 
   useEffect(() => {
     setSwordLevel(loadSwordLevel())
+    // Load weapon type from game state
+    try {
+      const session = typeof window !== 'undefined' ? localStorage.getItem('sword-session') : null
+      const key = session ? `sword-save-${session}` : 'sword-enhance-v2'
+      const raw = localStorage.getItem(key)
+      if (raw) { const s = JSON.parse(raw); setWeaponType(s.activeWeapon ?? 'sword') }
+    } catch { /* */ }
     setRecords(loadRecords())
     setReady(true)
   }, [])
@@ -104,5 +112,5 @@ export default function ArenaPage() {
     )
   }
 
-  return <ArenaGame swordLevel={swordLevel} onExit={handleExit} />
+  return <ArenaGame swordLevel={swordLevel} weaponType={weaponType} onExit={handleExit} />
 }

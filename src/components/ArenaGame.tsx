@@ -8,12 +8,13 @@ import { playArenaHit, playArenaKill, playArenaDamage, playArenaBossAlert, playA
 
 interface ArenaGameProps {
   swordLevel: number
+  weaponType?: string
   onExit: (goldEarned: number, wave?: number, kills?: number, time?: number) => void
 }
 
-export default function ArenaGame({ swordLevel, onExit }: ArenaGameProps) {
+export default function ArenaGame({ swordLevel, weaponType = 'sword', onExit }: ArenaGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const stateRef = useRef<ArenaState>(createInitialState(swordLevel))
+  const stateRef = useRef<ArenaState>(createInitialState(swordLevel, weaponType))
   const inputRef = useRef<Vec2>({ x: 0, y: 0 })
   const dashRef = useRef(false)
   const animRef = useRef<number>(0)
