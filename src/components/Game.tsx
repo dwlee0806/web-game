@@ -18,7 +18,7 @@ import SwordEffects from './SwordEffects'
 import GlobalFeed from './GlobalFeed'
 import EnhanceGauge from './EnhanceGauge'
 import AuthScreen from './AuthScreen'
-import { getCurrentUser, logout, getUserSaveKey, getUserMissionKey } from '@/lib/auth'
+import { getCurrentUser, logout, getUserSaveKey } from '@/lib/auth'
 import {
   type GameState,
   type EnhanceResult,
@@ -44,13 +44,14 @@ import {
 import { type Achievement, ACHIEVEMENTS, getNewAchievements, checkEasterEgg } from '@/lib/achievements'
 import { playEnhanceStart, playSuccess, playMaintain, playDestroy, playCheckIn, playBuy, playAchievement, playClick } from '@/lib/sounds'
 import { WEAPONS } from '@/lib/weapons'
-import { getActiveEvents, getSuccessBoost, getCostDiscount } from '@/lib/events'
+import { getActiveEvents, getSuccessBoost, getCostDiscount, getDestroyReduction } from '@/lib/events'
 import { detectLocale, t, type Locale } from '@/lib/i18n'
 import {
   type AllMissionsState,
   loadAllMissions,
   saveAllMissions,
   getMissionById,
+  getMissionTag,
 } from '@/lib/missions'
 
 const DEFAULT_STORAGE_KEY = 'sword-enhance-v2'
@@ -179,18 +180,17 @@ export default function Game() {
     return { ...prev, monthly: { ...prev.monthly, data: newData } }
   }
 
-  const progressMission = useCallback((ids: string[]) => {
+  // Tag-based mission progress: matches missions by their 'tag' field
+  const progressMission = useCallback((tags: string[]) => {
     setMissions(prev => {
       let result = prev
       for (const period of ['daily', 'weekly', 'monthly'] as const) {
         result = updatePeriodProgress(result, period, (progress, missions, claimed) => {
-          ids.forEach(id => {
-            const base = id.replace(/^[dwm]_/, '')
-            missions.forEach(mid => {
-              if (mid.replace(/^[dwm]_/, '').startsWith(base) && !claimed.includes(mid)) {
-                progress[mid] = (progress[mid] ?? 0) + 1
-              }
-            })
+          missions.forEach(mid => {
+            const mTag = getMissionTag(mid)
+            if (mTag && tags.includes(mTag) && !claimed.includes(mid)) {
+              progress[mid] = (progress[mid] ?? 0) + 1
+            }
           })
           return progress
         })
@@ -199,14 +199,13 @@ export default function Game() {
     })
   }, [])
 
-  const resetMissionProgress = useCallback((id: string) => {
+  const resetMissionProgress = useCallback((tag: string) => {
     setMissions(prev => {
       let result = prev
-      const base = id.replace(/^[dwm]_/, '')
       for (const period of ['daily', 'weekly', 'monthly'] as const) {
         result = updatePeriodProgress(result, period, (progress, missions, claimed) => {
           missions.forEach(mid => {
-            if (mid.replace(/^[dwm]_/, '').startsWith(base) && !claimed.includes(mid)) {
+            if (getMissionTag(mid) === tag && !claimed.includes(mid)) {
               progress[mid] = 0
             }
           })
@@ -217,14 +216,13 @@ export default function Game() {
     })
   }, [])
 
-  const setMissionLevel = useCallback((id: string, level: number) => {
+  const setMissionLevel = useCallback((tag: string, level: number) => {
     setMissions(prev => {
       let result = prev
-      const base = id.replace(/^[dwm]_/, '')
       for (const period of ['daily', 'weekly', 'monthly'] as const) {
         result = updatePeriodProgress(result, period, (progress, missions) => {
           missions.forEach(mid => {
-            if (mid.replace(/^[dwm]_/, '').startsWith(base)) {
+            if (getMissionTag(mid) === tag) {
               progress[mid] = Math.max(progress[mid] ?? 0, level)
             }
           })
@@ -268,6 +266,8 @@ export default function Game() {
     setCheckInReward(reward)
     setTimeout(() => setCheckInReward(null), 2000)
     progressMission(['checkin'])
+    // Update streak missions
+    setMissionLevel('streak', continued ? stateRef.current.checkInStreak + 1 : 1)
     if (soundRef.current) playCheckIn()
   }, [awardAchievements, progressMission])
 
@@ -292,7 +292,12 @@ export default function Game() {
     const wantBless = useBlessing && s.blessingScrolls > 0
     const eventBoost = getSuccessBoost()
 
-    const rawResult = rollEnhance(weaponLevel, wantBless, s.failStack + (s.prestigeBonus ?? 0) * 2 + eventBoost * 2)
+    let rawResult = rollEnhance(weaponLevel, wantBless, s.failStack + (s.prestigeBonus ?? 0) * 2 + eventBoost * 2)
+    // lunch_safe event: 50% chance to convert destroy → downgrade
+    const destroyReduction = getDestroyReduction()
+    if (rawResult === 'destroy' && destroyReduction > 0 && Math.random() * 100 < destroyReduction) {
+      rawResult = 'downgrade'
+    }
     const wasDestroyed = rawResult === 'destroy'
     const r: EnhanceResult = wasDestroyed && wantProtect ? 'maintain' : rawResult
 
@@ -371,20 +376,20 @@ export default function Game() {
     })
 
     // Mission progress
-    progressMission(['enhance5', 'enhance15', 'enhance30'])
-    if (r === 'success') progressMission(['success3', 'success10'])
-    // Bug fix: survive5 should only reset on actual destroy (not protected)
+    // Mission progress (tag-based)
+    progressMission(['enhance'])
+    if (r === 'success') progressMission(['success'])
     if (wasDestroyed && !wantProtect) {
-      resetMissionProgress('survive5')
+      resetMissionProgress('survive')
+      progressMission(['destroy'])
     } else {
-      progressMission(['survive5'])
+      progressMission(['survive'])
     }
     if (wantProtect) progressMission(['useprotect'])
     if (wantBless) progressMission(['usebless'])
 
     const newLevel = r === 'success' ? weaponLevel + 1 : r === 'downgrade' ? Math.max(0, weaponLevel - 1) : (wasDestroyed && !wantProtect) ? 0 : weaponLevel
-    setMissionLevel('reach5', newLevel)
-    setMissionLevel('reach10', newLevel)
+    setMissionLevel('reach', newLevel)
   }, [useProtection, useBlessing, awardAchievements, progressMission, resetMissionProgress, setMissionLevel])
 
   const handleEnhance = useCallback(() => {
@@ -425,7 +430,7 @@ export default function Game() {
       const key = item === 'protection' ? 'protectionScrolls' : 'blessingScrolls'
       return { ...prev, gold: prev.gold - price, [key]: prev[key] + qty }
     })
-    progressMission(['buyitem'])
+    progressMission(['buy'])
     if (soundRef.current) playBuy()
   }, [progressMission])
 
@@ -489,8 +494,11 @@ export default function Game() {
       lastOnline: Date.now(),
     }))
     setAutoMode(false)
+    progressMission(['prestige'])
+    // Update weapon count mission
+    setMissionLevel('weapons', Object.keys(stateRef.current.weapons ?? {}).length)
     if (soundRef.current) playAchievement()
-  }, [])
+  }, [progressMission, setMissionLevel])
 
   const handleLogout = useCallback(() => {
     logout()
@@ -503,6 +511,8 @@ export default function Game() {
     if (confirm('정말 초기화하시겠습니까? 모든 데이터가 삭제됩니다.')) {
       setAutoMode(false)
       setState(INITIAL_STATE)
+      // Clear missions from localStorage before reloading
+      localStorage.removeItem('sword-missions-v2')
       setMissions(loadAllMissions())
     }
   }, [])
@@ -710,7 +720,7 @@ export default function Game() {
                           <p className="text-xs text-gray-300 mb-2">포인트 +{getPrestigePoints(state.highestLevel)} / 성공률 +{(state.prestigeBonus ?? 0).toFixed(1)}%</p>
                           <button onClick={handlePrestige} className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 font-bold text-sm transition-all active:scale-[0.98]">환생하기</button>
                         </>
-                      ) : <p className="text-xs text-gray-600">+10 이상 달성 시 가능</p>}
+                      ) : <p className="text-xs text-gray-600">+7 이상 달성 시 가능</p>}
                     </div>
                     <AdBanner className="min-h-[80px] rounded-xl overflow-hidden" />
                     <ShareButton state={state} />

@@ -161,8 +161,7 @@ export type ShopItem = keyof typeof SHOP
 
 // Prestige: reset level/weapons, gain permanent bonuses
 export function getPrestigeReward(highestLevel: number, currentPrestige: number): { bonus: number; goldMultiplier: number } {
-  // Each prestige point gives +0.5% success rate and 1.1x gold multiplier
-  const newPoints = Math.floor(highestLevel / 5) // 1 point per 5 levels achieved
+  const newPoints = getPrestigePoints(highestLevel)
   const totalBonus = (currentPrestige + newPoints) * 0.5
   const goldMultiplier = 1 + (currentPrestige + newPoints) * 0.1
   return { bonus: Math.min(totalBonus, 50), goldMultiplier: Math.min(goldMultiplier, 5) }
