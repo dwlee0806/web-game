@@ -21,7 +21,7 @@ export default function AboutPage() {
           <h2 className="text-lg font-bold text-white pt-4">게임 방법</h2>
           <ul className="list-disc list-inside space-y-1 text-gray-400">
             <li>매일 출석체크로 골드를 획득하세요 (연속 출석 시 보너스!)</li>
-            <li>골드를 사용해 검을 강화하세요 (+0 ~ +30)</li>
+            <li>골드를 사용해 검을 강화하세요 (+0 ~ +16)</li>
             <li>레벨이 올라갈수록 성공 확률이 낮아지고, 파괴 확률이 올라갑니다</li>
             <li>상점에서 보호 주문서와 축복 주문서를 구매할 수 있습니다</li>
             <li>다양한 업적을 달성하고 보상을 받으세요</li>
@@ -29,14 +29,14 @@ export default function AboutPage() {
 
           <h2 className="text-lg font-bold text-white pt-4">등급 시스템</h2>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <span className="text-gray-400">+0 일반</span>
-            <span className="text-blue-400">+1~4 고급</span>
-            <span className="text-purple-400">+5~9 희귀</span>
-            <span className="text-yellow-400">+10~14 영웅</span>
-            <span className="text-orange-400">+15~19 전설</span>
-            <span className="text-red-400">+20~24 신화</span>
-            <span className="text-pink-400">+25~29 초월</span>
-            <span className="text-amber-300">+30 태초</span>
+            <span className="text-gray-400">+0~2 일반</span>
+            <span className="text-blue-400">+3~4 고급</span>
+            <span className="text-purple-400">+5~6 희귀</span>
+            <span className="text-yellow-400">+7~8 영웅</span>
+            <span className="text-orange-400">+9~10 전설</span>
+            <span className="text-red-400">+11~12 신화</span>
+            <span className="text-pink-400">+13~14 초월</span>
+            <span className="text-amber-300">+15~16 태초</span>
           </div>
 
           <h2 className="text-lg font-bold text-white pt-4">특징</h2>

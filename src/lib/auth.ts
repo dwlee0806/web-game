@@ -175,6 +175,13 @@ export async function login(id: string, password: string): Promise<{ ok: boolean
   return { ok: true }
 }
 
+// Admin check — hardcoded admin ID (never expose credentials in code)
+const ADMIN_ID = 'forgd_master'
+
+export function isAdmin(userId: string | null): boolean {
+  return userId === ADMIN_ID
+}
+
 // Per-user game save key (sanitized)
 export function getUserSaveKey(userId: string): string {
   return `sword-save-${sanitizeId(userId)}`

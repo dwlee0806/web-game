@@ -72,8 +72,8 @@ export default function GuidePage() {
               <p>+0~+4는 파괴 확률이 0%입니다. 보호/축복 주문서를 아끼세요.</p>
             </div>
             <div>
-              <h3 className="font-bold text-white mb-1">2. +10 이상부터 보호 주문서 추천</h3>
-              <p>파괴 확률이 30%를 넘기 시작합니다. 보호 주문서로 레벨을 지키세요.</p>
+              <h3 className="font-bold text-white mb-1">2. +7 이상부터 보호 주문서 추천</h3>
+              <p>파괴 확률이 15%를 넘기 시작합니다. 보호 주문서로 레벨을 지키세요.</p>
             </div>
             <div>
               <h3 className="font-bold text-white mb-1">3. 축복 주문서는 고레벨에서 효과적</h3>
@@ -108,7 +108,7 @@ export default function GuidePage() {
                 <span className="font-bold">파괴방지 주문서</span>
                 <span className="text-yellow-400 text-sm ml-auto">800G</span>
               </div>
-              <p className="text-sm text-gray-400">파괴 판정 시 레벨이 유지됩니다. +10 이상에서 사용을 권장합니다.</p>
+              <p className="text-sm text-gray-400">파괴 판정 시 레벨이 유지됩니다. +7 이상에서 사용을 권장합니다.</p>
             </div>
             <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-800/40">
               <div className="flex items-center gap-2 mb-1">
@@ -125,7 +125,7 @@ export default function GuidePage() {
         <section className="mt-10 space-y-4">
           <h2 className="text-lg font-bold">⭐ 환생 (프레스티지)</h2>
           <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-800/40 text-sm text-gray-300 space-y-2">
-            <p>+10 이상 달성 시 상점에서 <strong className="text-purple-400">환생</strong>할 수 있습니다.</p>
+            <p>+7 이상 달성 시 상점에서 <strong className="text-purple-400">환생</strong>할 수 있습니다.</p>
             <p>환생하면 레벨과 무기가 초기화되지만, 영구 보너스를 획득합니다.</p>
             <ul className="list-disc list-inside text-gray-400 space-y-1">
               <li>5레벨당 프레스티지 포인트 1개</li>
