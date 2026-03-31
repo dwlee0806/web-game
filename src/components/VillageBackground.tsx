@@ -15,7 +15,7 @@ interface NpcData {
   size: number
 }
 
-export default memo(function VillageBackground() {
+export default memo(function VillageBackground({ onNpcClick }: { onNpcClick?: () => void }) {
   const npcs = useMemo<NpcData[]>(() =>
     NPC_TYPES.map((type, i) => ({
       id: i,
@@ -204,7 +204,7 @@ export default memo(function VillageBackground() {
             zIndex: Math.floor(npc.y),
           }}
         >
-          <div className="animate-npc-bounce" style={{ animationDuration: '0.5s', transform: npc.direction === 'left' ? 'scaleX(-1)' : undefined }}>
+          <div className="animate-npc-bounce pointer-events-auto cursor-pointer" onClick={onNpcClick} style={{ animationDuration: '0.5s', transform: npc.direction === 'left' ? 'scaleX(-1)' : undefined }}>
             <NpcSprite type={npc.type} size={npc.size} />
           </div>
         </div>

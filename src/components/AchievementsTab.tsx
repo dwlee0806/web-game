@@ -14,14 +14,14 @@ export default function AchievementsTab({ achieved }: AchievementsTabProps) {
     <div className="px-1">
       <p className="text-center text-gray-400 text-sm mb-4">
         달성{' '}
-        <span className="text-yellow-400 font-bold">
-          {done}/{total}
-        </span>
+        <span className="text-yellow-400 font-bold">{done}/{total}</span>
       </p>
 
       <div className="space-y-2">
         {ACHIEVEMENTS.map(a => {
           const unlocked = achieved.includes(a.id)
+          const isHidden = a.hidden && !unlocked
+
           return (
             <div
               key={a.id}
@@ -31,12 +31,16 @@ export default function AchievementsTab({ achieved }: AchievementsTabProps) {
                   : 'bg-gray-900/30 border border-gray-800/20 opacity-50'
               }`}
             >
-              <span className={`text-2xl ${unlocked ? '' : 'grayscale'}`}>
-                {a.icon}
+              <span className={`text-2xl ${isHidden ? 'grayscale blur-[2px]' : unlocked ? '' : 'grayscale'}`}>
+                {isHidden ? '❓' : a.icon}
               </span>
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm">{a.name}</div>
-                <div className="text-xs text-gray-400">{a.desc}</div>
+                <div className="font-medium text-sm">
+                  {isHidden ? '??? 히든 업적 ???' : a.name}
+                </div>
+                <div className="text-xs text-gray-400">
+                  {isHidden ? '특별한 조건을 만족하면 달성!' : a.desc}
+                </div>
               </div>
               <div className="text-right shrink-0">
                 {unlocked ? (
@@ -45,7 +49,7 @@ export default function AchievementsTab({ achieved }: AchievementsTabProps) {
                   </span>
                 ) : (
                   <span className="text-xs text-gray-600">
-                    {a.reward.toLocaleString()}G
+                    {isHidden ? '???' : `${a.reward.toLocaleString()}G`}
                   </span>
                 )}
               </div>

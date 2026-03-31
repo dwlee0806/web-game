@@ -40,7 +40,7 @@ import {
   getOfflineGold,
   rollSpecialSkin,
 } from '@/lib/gameLogic'
-import { type Achievement, getNewAchievements } from '@/lib/achievements'
+import { type Achievement, ACHIEVEMENTS, getNewAchievements, checkEasterEgg } from '@/lib/achievements'
 import { playEnhanceStart, playSuccess, playMaintain, playDestroy, playCheckIn, playBuy, playAchievement, playClick } from '@/lib/sounds'
 import { WEAPONS } from '@/lib/weapons'
 import { getActiveEvents, getSuccessBoost, getCostDiscount } from '@/lib/events'
@@ -162,6 +162,20 @@ export default function Game() {
       initGame(existingUser)
     }
     setAuthChecked(true)
+
+    // Easter egg event listener
+    const handleEE = (e: Event) => {
+      const id = (e as CustomEvent).detail as string
+      setState(prev => {
+        if (prev.achievements.includes(id)) return prev
+        const ach = ACHIEVEMENTS.find(a => a.id === id)
+        if (!ach) return prev
+        achQueueRef.current = [...achQueueRef.current, ach]
+        return { ...prev, achievements: [...prev.achievements, id], gold: prev.gold + (ach.reward ?? 0) }
+      })
+    }
+    window.addEventListener('easter-egg', handleEE)
+    return () => window.removeEventListener('easter-egg', handleEE)
   }, [initGame])
 
   useEffect(() => {
