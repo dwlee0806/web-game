@@ -279,23 +279,34 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .animate-spark-rise { animation: spark-rise ease-out infinite; }
 .animate-tier-flash { animation: tier-flash 0.8s ease-out forwards; }
 
-/* ── Melee lightning sparks ── */
-@keyframes lightning-spark {
-  0% { opacity: 0; transform: scale(0.5); }
-  15% { opacity: 1; transform: scale(1.2); }
-  30% { opacity: 0.8; transform: scale(1); }
-  50% { opacity: 0; transform: scale(0.3); }
+/* ── Lightning bolt (melee) — sharp flash ── */
+@keyframes lightning-bolt {
+  0%, 80% { opacity: 0; }
+  82% { opacity: 1; transform: scaleY(0.8); }
+  85% { opacity: 0.3; }
+  88% { opacity: 1; transform: scaleY(1.1); }
+  92% { opacity: 0; }
   100% { opacity: 0; }
 }
-.animate-lightning-spark { animation: lightning-spark ease-out infinite; }
+.animate-lightning-bolt { animation: lightning-bolt linear infinite; animation-duration: calc(var(--bolt-repeat, 2s) + 0.3s); }
 
-/* ── Bow wind sweep ── */
-@keyframes wind-sweep {
-  0% { opacity: 0; transform: translateX(-10px); }
-  30% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(30px); }
+/* ── Wind flow (bow) — smooth horizontal drift ── */
+@keyframes wind-flow {
+  0% { opacity: 0; transform: translateX(-20px) scaleX(0.5); }
+  20% { opacity: 0.7; transform: translateX(0) scaleX(1); }
+  80% { opacity: 0.5; transform: translateX(15px) scaleX(1.1); }
+  100% { opacity: 0; transform: translateX(30px) scaleX(0.8); }
 }
-.animate-wind-sweep { animation: wind-sweep ease-out infinite; }
+.animate-wind-flow { animation: wind-flow ease-in-out infinite; }
+
+/* ── Aura expand (staff) — rings pulse outward ── */
+@keyframes aura-expand {
+  0% { opacity: 0; transform: translate(-50%, -25%) scale(0.3); }
+  30% { opacity: 0.6; transform: translate(-50%, -25%) scale(0.7); }
+  70% { opacity: 0.3; transform: translate(-50%, -25%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -25%) scale(1.2); }
+}
+.animate-aura-expand { animation: aura-expand ease-out infinite; }
 
 /* ── Village NPCs + Clouds ── */
 

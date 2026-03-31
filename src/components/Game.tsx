@@ -18,7 +18,7 @@ import SwordEffects from './SwordEffects'
 import GlobalFeed from './GlobalFeed'
 import EnhanceGauge from './EnhanceGauge'
 import AuthScreen from './AuthScreen'
-import { getCurrentUser, logout, getUserSaveKey } from '@/lib/auth'
+import { getCurrentUser, logout, getUserSaveKey, isAdmin } from '@/lib/auth'
 import {
   type GameState,
   type EnhanceResult,
@@ -279,7 +279,8 @@ export default function Game() {
     const baseCost = getEnhanceCost(weaponLevel)
     const discount = getCostDiscount()
     const cost = Math.max(1, Math.floor(baseCost * (1 - discount / 100)))
-    if (s.gold < cost) {
+    const adminMode = isAdmin(userId)
+    if (!adminMode && s.gold < cost) {
       setAutoMode(false)
       if (!localStorage.getItem('sword-guide-gold-shown')) {
         setGuideStep('gold_empty')
@@ -356,7 +357,7 @@ export default function Game() {
       const updated: GameState = {
         ...prev,
         level: newLevel,
-        gold: prev.gold - cost,
+        gold: adminMode ? prev.gold : prev.gold - cost,
         totalAttempts: prev.totalAttempts + 1,
         totalSuccess: prev.totalSuccess + (r === 'success' ? 1 : 0),
         totalMaintain: prev.totalMaintain + (r === 'maintain' ? 1 : 0),
@@ -532,7 +533,7 @@ export default function Game() {
   const tier = getLevelTier(state.level)
   const rates = getEnhanceRates(state.level)
   const cost = getEnhanceCost(state.level)
-  const canAfford = state.gold >= cost
+  const canAfford = isAdmin(userId) || state.gold >= cost
   const maxed = state.level >= MAX_LEVEL
   const checkable = canCheckIn(state.lastCheckIn)
   const unclaimedMissions = (['daily', 'weekly', 'monthly'] as const).reduce((count, period) => {

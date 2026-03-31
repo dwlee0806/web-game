@@ -9,6 +9,34 @@ interface NpcData {
   id: number; type: string; y: number; speed: number; delay: number; direction: 'left' | 'right'; size: number
 }
 
+// Time-based sky colors
+function getSkyColors(): { top: string; mid: string; bottom: string; sunMoonY: number; isSun: boolean; stars: boolean } {
+  const hour = new Date().getHours()
+  const min = new Date().getMinutes()
+  const t = hour + min / 60
+
+  if (t >= 6 && t < 8) { // Dawn
+    const p = (t - 6) / 2
+    return { top: lerpColor('#0a1628', '#6AB4D6', p), mid: lerpColor('#1a2840', '#F5C098', p), bottom: lerpColor('#1a1a30', '#F0E6D3', p), sunMoonY: 40 - p * 30, isSun: true, stars: p < 0.3 }
+  }
+  if (t >= 8 && t < 17) { // Day
+    return { top: '#6AB4D6', mid: '#9DD4ED', bottom: '#F0E6D3', sunMoonY: 8 + Math.sin((t - 8) / 9 * Math.PI) * -5, isSun: true, stars: false }
+  }
+  if (t >= 17 && t < 19.5) { // Sunset
+    const p = (t - 17) / 2.5
+    return { top: lerpColor('#6AB4D6', '#1a1030', p), mid: lerpColor('#9DD4ED', '#D4546A', p), bottom: lerpColor('#F0E6D3', '#FF8040', p), sunMoonY: 10 + p * 35, isSun: true, stars: p > 0.7 }
+  }
+  // Night (19.5 - 6)
+  return { top: '#0a0e1a', mid: '#101828', bottom: '#1a1a30', sunMoonY: 15, isSun: false, stars: true }
+}
+
+function lerpColor(a: string, b: string, t: number): string {
+  const parse = (c: string) => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)]
+  const [r1, g1, b1] = parse(a); const [r2, g2, b2] = parse(b)
+  const r = Math.round(r1 + (r2 - r1) * t); const g = Math.round(g1 + (g2 - g1) * t); const bl = Math.round(b1 + (b2 - b1) * t)
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${bl.toString(16).padStart(2, '0')}`
+}
+
 export default memo(function VillageBackground({ onNpcClick }: { onNpcClick?: () => void }) {
   const npcs = useMemo<NpcData[]>(() =>
     NPC_TYPES.map((type, i) => ({
@@ -23,13 +51,39 @@ export default memo(function VillageBackground({ onNpcClick }: { onNpcClick?: ()
 
   return (
     <div className="hidden lg:block fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
-      {/* Sky */}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, #6AB4D6 0%, #9DD4ED 25%, #C8E6F5 50%, #F0E6D3 75%, #D4B896 100%)' }} />
+      {/* Dynamic sky based on real time */}
+      {(() => {
+        const sky = getSkyColors()
+        return (
+          <>
+            <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${sky.top} 0%, ${sky.mid} 50%, ${sky.bottom} 100%)`, transition: 'background 60s linear' }} />
 
-      {/* Sun with halo */}
-      <div className="absolute top-8 right-[15%]">
-        <div className="w-24 h-24 rounded-full" style={{ background: 'radial-gradient(circle, #FFF9C4 0%, #FFD54F 30%, #FFB30015 60%, transparent 100%)', boxShadow: '0 0 80px #FFD54F40' }} />
-      </div>
+            {/* Sun or Moon */}
+            <div className="absolute right-[15%]" style={{ top: `${sky.sunMoonY}%`, transition: 'top 60s linear' }}>
+              {sky.isSun ? (
+                <div className="w-20 h-20 rounded-full" style={{ background: 'radial-gradient(circle, #FFF9C4 0%, #FFD54F 30%, #FFB30015 60%, transparent 100%)', boxShadow: '0 0 60px #FFD54F40' }} />
+              ) : (
+                <div className="w-16 h-16 rounded-full relative" style={{ background: 'radial-gradient(circle, #E8E8F0 0%, #C0C0D0 40%, #A0A0B080 70%, transparent 100%)', boxShadow: '0 0 40px #C0C0D030' }}>
+                  {/* Moon craters */}
+                  <div className="absolute w-3 h-3 rounded-full bg-gray-400/20" style={{ top: '25%', left: '30%' }} />
+                  <div className="absolute w-2 h-2 rounded-full bg-gray-400/15" style={{ top: '55%', left: '55%' }} />
+                </div>
+              )}
+            </div>
+
+            {/* Stars (night only) */}
+            {sky.stars && Array.from({ length: 30 }, (_, i) => (
+              <div key={`star-${i}`} className="absolute rounded-full bg-white" style={{
+                width: 1 + (i % 3), height: 1 + (i % 3),
+                top: `${(i * 7.3 + 3) % 45}%`, left: `${(i * 13.7 + 5) % 100}%`,
+                opacity: 0.3 + (i % 4) * 0.15,
+                animation: `star-twinkle ${2 + (i % 3)}s ease-in-out infinite`,
+                animationDelay: `${(i * 0.3) % 3}s`,
+              }} />
+            ))}
+          </>
+        )
+      })()}
 
       {/* ═══ CLOUD LAYER 1: Far background (slow, small, faint) ═══ */}
       {[8, 35, 62, 85].map((left, i) => (
