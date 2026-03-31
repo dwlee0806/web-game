@@ -80,6 +80,7 @@ export default function RootLayout({
             <Link href="/" className="hover:text-gray-400 transition-colors">홈</Link>
             <Link href="/arena" className="hover:text-gray-400 transition-colors">던전</Link>
             <Link href="/pvp" className="hover:text-gray-400 transition-colors">PvP</Link>
+            <Link href="/notices" className="hover:text-gray-400 transition-colors">공지</Link>
             <Link href="/guide" className="hover:text-gray-400 transition-colors">확률표</Link>
             <Link href="/about" className="hover:text-gray-400 transition-colors">소개</Link>
             <Link href="/privacy" className="hover:text-gray-400 transition-colors">개인정보처리방침</Link>
