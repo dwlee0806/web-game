@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { register, login } from '@/lib/auth'
+import HeroAvatar from './HeroAvatar'
 
 interface AuthScreenProps {
   onAuth: (userId: string) => void
@@ -34,31 +35,38 @@ export default function AuthScreen({ onAuth, onGuest }: AuthScreenProps) {
   }, [mode, id, password, onAuth])
 
   return (
-    <div className="min-h-dvh bg-gray-950 text-white flex flex-col items-center justify-center px-4">
-      {/* Background */}
-      <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center 40%, rgba(99,102,241,0.08) 0%, transparent 60%)' }} />
+    <div className="min-h-dvh bg-[#06080F] text-white flex flex-col items-center justify-center px-4 relative overflow-hidden">
+      {/* Ambient background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 60%)' }} />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 60%)' }} />
+      </div>
 
       <div className="relative z-10 w-full max-w-sm">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-3">⚔️</div>
-          <h1 className="text-2xl font-black tracking-tight">검 강화 시뮬레이터</h1>
-          <p className="text-sm text-gray-500 mt-1">Sword Enhancement Simulator</p>
+        <div className="text-center mb-10">
+          <div className="flex justify-center mb-4">
+            <HeroAvatar size={72} expression="excited" />
+          </div>
+          <h1 className="font-display text-3xl font-black tracking-tight bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">
+            FORGD
+          </h1>
+          <p className="text-[13px] text-white/40 mt-1 tracking-wider font-medium">Sword Enhancement Simulator</p>
         </div>
 
         {/* Auth card */}
         <div className="glass-card rounded-2xl p-6 space-y-5">
           {/* Tab toggle */}
-          <div className="flex rounded-xl bg-gray-800/60 p-1">
+          <div className="flex rounded-xl bg-white/[0.04] p-1">
             <button
               onClick={() => { setMode('login'); setError(null) }}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'login' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${mode === 'login' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/60'}`}
             >
               로그인
             </button>
             <button
               onClick={() => { setMode('register'); setError(null) }}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'register' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${mode === 'register' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/60'}`}
             >
               회원가입
             </button>
@@ -66,7 +74,7 @@ export default function AuthScreen({ onAuth, onGuest }: AuthScreenProps) {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">아이디</label>
+              <label className="block text-[11px] text-white/40 font-medium mb-1.5 tracking-wider uppercase">아이디</label>
               <input
                 type="text"
                 value={id}
@@ -74,30 +82,33 @@ export default function AuthScreen({ onAuth, onGuest }: AuthScreenProps) {
                 placeholder="영문, 숫자, _ (2~20자)"
                 autoComplete="username"
                 spellCheck={false}
-                className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-gray-700/50 text-white placeholder-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/30 transition-all duration-300"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">비밀번호</label>
+              <label className="block text-[11px] text-white/40 font-medium mb-1.5 tracking-wider uppercase">비밀번호</label>
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="4자 이상"
                 autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                className="w-full px-4 py-3 rounded-xl bg-gray-800/80 border border-gray-700/50 text-white placeholder-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/30 transition-all duration-300"
               />
             </div>
 
             {error && (
-              <p className="text-red-400 text-sm text-center animate-result-in">{error}</p>
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20">
+                <span className="text-red-400 text-xs">⚠</span>
+                <p className="text-red-300 text-xs">{error}</p>
+              </div>
             )}
 
             {mode === 'register' && (
-              <div className="bg-red-900/20 border border-red-800/30 rounded-xl p-3">
-                <p className="text-xs text-red-300 text-center leading-relaxed">
-                  ⚠️ 아이디와 비밀번호를 잊으면 복구할 수 없습니다.<br />
-                  반드시 기억해 두세요!
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/15">
+                <span className="text-amber-400 text-xs mt-0.5">⚠️</span>
+                <p className="text-[11px] text-amber-300/80 leading-relaxed">
+                  아이디와 비밀번호를 잊으면 복구할 수 없습니다.
                 </p>
               </div>
             )}
@@ -105,7 +116,7 @@ export default function AuthScreen({ onAuth, onGuest }: AuthScreenProps) {
             <button
               type="submit"
               disabled={loading || !id.trim() || !password}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3.5 rounded-xl gradient-primary font-bold text-sm tracking-wide transition-all duration-300 hover:opacity-90 active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20"
             >
               {loading ? '처리 중…' : mode === 'register' ? '계정 만들기' : '로그인'}
             </button>
@@ -115,13 +126,13 @@ export default function AuthScreen({ onAuth, onGuest }: AuthScreenProps) {
         {/* Guest play */}
         <button
           onClick={onGuest}
-          className="w-full mt-4 py-3.5 rounded-xl border border-gray-700 bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium text-base transition-all active:scale-[0.98]"
+          className="w-full mt-4 py-3.5 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] text-white/70 hover:text-white font-semibold text-[15px] transition-all duration-300 active:scale-[0.98]"
         >
           🎮 바로 플레이하기
         </button>
 
-        <p className="text-center text-[10px] text-gray-700 mt-6">
-          데이터는 이 브라우저에 저장됩니다
+        <p className="text-center text-[10px] text-white/15 mt-8 tracking-wider">
+          FORGD.IO — Data stored locally in your browser
         </p>
       </div>
     </div>

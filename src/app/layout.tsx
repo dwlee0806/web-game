@@ -44,6 +44,10 @@ export default function RootLayout({
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon.svg" />
+        {/* Premium fonts */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
         {/* Security headers */}
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
@@ -75,17 +79,23 @@ export default function RootLayout({
       <body className="bg-gray-950 antialiased">
         {children}
         <CookieConsent />
-        <footer className="bg-gray-950 border-t border-gray-800/40 py-4 text-center text-xs text-gray-600">
-          <div className="flex justify-center gap-4">
-            <Link href="/" className="hover:text-gray-400 transition-colors">홈</Link>
-            <Link href="/arena" className="hover:text-gray-400 transition-colors">던전</Link>
-            <Link href="/pvp" className="hover:text-gray-400 transition-colors">PvP</Link>
-            <Link href="/notices" className="hover:text-gray-400 transition-colors">공지</Link>
-            <Link href="/guide" className="hover:text-gray-400 transition-colors">확률표</Link>
-            <Link href="/about" className="hover:text-gray-400 transition-colors">소개</Link>
-            <Link href="/privacy" className="hover:text-gray-400 transition-colors">개인정보처리방침</Link>
+        <footer className="relative bg-[#06080F] border-t border-white/[0.04] py-6">
+          <div className="max-w-2xl mx-auto px-4">
+            <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[11px]">
+              {[
+                { href: '/', label: '홈' },
+                { href: '/arena', label: '던전' },
+                { href: '/pvp', label: 'PvP' },
+                { href: '/notices', label: '공지' },
+                { href: '/guide', label: '확률표' },
+                { href: '/about', label: '소개' },
+                { href: '/privacy', label: '개인정보' },
+              ].map(l => (
+                <Link key={l.href} href={l.href} className="text-white/30 hover:text-white/70 transition-colors duration-300">{l.label}</Link>
+              ))}
+            </div>
+            <p className="mt-3 text-center text-[10px] text-white/20 tracking-wider">© 2026 FORGD.IO — Sword Enhancement Simulator</p>
           </div>
-          <p className="mt-2">© 2026 검 강화 시뮬레이터</p>
         </footer>
       </body>
     </html>
