@@ -781,7 +781,7 @@ function EnhanceContent({
       <div className="flex items-center justify-center gap-4 py-2 relative">
         <Particles type={particleType} />
         <MagicCircle active={showMagicCircle} color={tier.color} />
-        <SwordEffects level={state.level} color={tier.color} result={result} />
+        <SwordEffects level={state.level} color={tier.color} result={result} weaponType={state.activeWeapon} />
         {levelBurst && <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full animate-level-burst" style={{ border: `2px solid ${tier.color}`, boxShadow: `0 0 20px ${tier.color}` }} />}
 
         <div className={`shrink-0 ${enhancing && !result ? 'animate-enhance' : ''} ${result === 'destroy' ? 'animate-shake' : ''} ${!enhancing && state.level > 0 ? 'animate-sword-breathe' : ''} ${shattered ? 'opacity-0' : ''}`} style={{ transform: 'scale(0.65)', transformOrigin: 'center', transition: 'opacity 0.3s' }}>
