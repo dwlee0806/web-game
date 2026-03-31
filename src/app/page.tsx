@@ -23,6 +23,7 @@ export default function Page() {
 
   return (
     <>
+      <style>{`footer { display: none !important; }`}</style>
       <VillageBackground onNpcClick={handleNpcClick} />
       <Game />
     </>

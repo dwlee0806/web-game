@@ -56,7 +56,7 @@ import {
 
 const DEFAULT_STORAGE_KEY = 'sword-enhance-v2'
 // Missions now managed by missions.ts (v2)
-type Tab = 'enhance' | 'shop' | 'missions' | 'achievements' | 'stats'
+type Tab = 'enhance' | 'shop' | 'missions' | 'achievements' | 'stats' | 'notices'
 
 function loadState(userId: string | null): GameState {
   if (typeof window === 'undefined') return INITIAL_STATE
@@ -279,8 +279,8 @@ export default function Game() {
     const baseCost = getEnhanceCost(weaponLevel)
     const discount = getCostDiscount()
     const cost = Math.max(1, Math.floor(baseCost * (1 - discount / 100)))
-    const adminMode = isAdmin(userId)
-    if (!adminMode && s.gold < cost) {
+    const isAdminUser = isAdmin(stateRef.current ? userId : null)
+    if (!isAdminUser && s.gold < cost) {
       setAutoMode(false)
       if (!localStorage.getItem('sword-guide-gold-shown')) {
         setGuideStep('gold_empty')
@@ -357,7 +357,7 @@ export default function Game() {
       const updated: GameState = {
         ...prev,
         level: newLevel,
-        gold: adminMode ? prev.gold : prev.gold - cost,
+        gold: isAdminUser ? prev.gold : prev.gold - cost,
         totalAttempts: prev.totalAttempts + 1,
         totalSuccess: prev.totalSuccess + (r === 'success' ? 1 : 0),
         totalMaintain: prev.totalMaintain + (r === 'maintain' ? 1 : 0),
@@ -684,20 +684,28 @@ export default function Game() {
         </div>
 
         {/* Bottom quick-access bar */}
-        <nav className="flex shrink-0 border-t border-gray-800/40 bg-gray-950/80 backdrop-blur-sm relative z-20">
+        <nav className="flex shrink-0 border-t border-white/[0.04] bg-[#06080F]/90 backdrop-blur-sm relative z-20">
           {([
-            { key: 'shop' as Tab, icon: '🏪', label: t('tab_shop', locale) },
-            { key: 'missions' as Tab, icon: '📋', label: t('tab_missions', locale), badge: unclaimedMissions },
-            { key: 'achievements' as Tab, icon: '🏆', label: t('tab_achievements', locale) },
-            { key: 'stats' as Tab, icon: '📊', label: t('tab_stats', locale) },
+            { key: 'shop' as Tab, icon: '🏪', label: '상점' },
+            { key: 'missions' as Tab, icon: '📋', label: '미션', badge: unclaimedMissions },
+            { key: 'achievements' as Tab, icon: '🏆', label: '업적' },
+            { key: 'stats' as Tab, icon: '📊', label: '통계' },
+            { key: 'notices' as Tab, icon: '📢', label: '공지', href: '/notices' },
           ]).map(tb => (
-            <button key={tb.key} onClick={() => { setAutoMode(false); setTab(tab === tb.key ? 'enhance' : tb.key) }} className={`flex-1 py-2.5 text-center transition-colors relative ${tab === tb.key ? 'text-white bg-gray-800/50' : 'text-gray-500 hover:text-gray-300'}`}>
-              <div className="text-base">{tb.icon}</div>
-              <div className="text-[9px] mt-0.5">{tb.label}</div>
-              {tb.badge != null && tb.badge > 0 && (
-                <span className="absolute top-1 right-1/4 bg-red-500 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">{tb.badge}</span>
-              )}
-            </button>
+            tb.href ? (
+              <a key={tb.key} href={tb.href} className="flex-1 py-2 text-center text-white/30 hover:text-white/50 transition-colors">
+                <div className="text-sm leading-none">{tb.icon}</div>
+                <div className="text-[8px] mt-0.5 truncate">{tb.label}</div>
+              </a>
+            ) : (
+              <button key={tb.key} onClick={() => { setAutoMode(false); setTab(tab === tb.key ? 'enhance' : tb.key) }} className={`flex-1 py-2 text-center transition-colors duration-200 relative ${tab === tb.key ? 'text-white' : 'text-white/30 hover:text-white/50'}`}>
+                <div className="text-sm leading-none">{tb.icon}</div>
+                <div className="text-[8px] mt-0.5 truncate">{tb.label}</div>
+                {tb.badge != null && tb.badge > 0 && (
+                  <span className="absolute top-0.5 right-[15%] bg-red-500 text-white text-[7px] font-bold w-3 h-3 rounded-full flex items-center justify-center">{tb.badge}</span>
+                )}
+              </button>
+            )
           ))}
         </nav>
 
@@ -779,18 +787,20 @@ function EnhanceContent({
       <WeaponSelect state={state} onSelect={onSelectWeapon} onUnlock={onUnlockWeapon} />
 
       {/* Sword + Level (compact) */}
-      <div className="flex items-center justify-center gap-4 py-2 relative">
-        <Particles type={particleType} />
-        <MagicCircle active={showMagicCircle} color={tier.color} />
-        <SwordEffects level={state.level} color={tier.color} result={result} weaponType={state.activeWeapon} />
-        {levelBurst && <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full animate-level-burst" style={{ border: `2px solid ${tier.color}`, boxShadow: `0 0 20px ${tier.color}` }} />}
+      <div className="flex items-center justify-center gap-3 py-2">
+        {/* Weapon container: sword + effects aligned together */}
+        <div className="relative shrink-0">
+          <Particles type={particleType} />
+          <MagicCircle active={showMagicCircle} color={tier.color} />
+          <SwordEffects level={state.level} color={tier.color} result={result} weaponType={state.activeWeapon} />
+          {levelBurst && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full animate-level-burst" style={{ border: `2px solid ${tier.color}`, boxShadow: `0 0 20px ${tier.color}` }} />}
 
-        <div className={`shrink-0 ${enhancing && !result ? 'animate-enhance' : ''} ${result === 'destroy' ? 'animate-shake' : ''} ${!enhancing && state.level > 0 ? 'animate-sword-breathe' : ''} ${shattered ? 'opacity-0' : ''}`} style={{ transform: 'scale(0.65)', transformOrigin: 'center', transition: 'opacity 0.3s' }}>
-          <Sword level={state.level} color={tier.color} weaponType={state.activeWeapon} specialSkin={state.specialSkin} />
-        </div>
+          <div className={`${enhancing && !result ? 'animate-enhance' : ''} ${result === 'destroy' ? 'animate-shake' : ''} ${!enhancing && state.level > 0 ? 'animate-sword-breathe' : ''} ${shattered ? 'opacity-0' : ''}`} style={{ transform: 'scale(0.65)', transformOrigin: 'center', transition: 'opacity 0.3s' }}>
+            <Sword level={state.level} color={tier.color} weaponType={state.activeWeapon} specialSkin={state.specialSkin} />
+          </div>
         {/* Shatter fragments */}
         {shattered && (
-          <div className="shrink-0 relative" style={{ width: 78, height: 143 }}>
+          <div className="relative" style={{ width: 78, height: 143 }}>
             <div className="absolute inset-0 animate-shatter-left" style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }}>
               <div style={{ transform: 'scale(0.65)', transformOrigin: 'center' }}><Sword level={0} color="#666" /></div>
             </div>
@@ -799,6 +809,7 @@ function EnhanceContent({
             </div>
           </div>
         )}
+        </div>{/* end weapon container */}
 
         <div className="text-center min-w-0">
           <div className={`text-4xl font-black text-glow ${result === 'success' ? 'animate-pop' : ''}`} style={{ color: tier.color }}>+{state.level}</div>
