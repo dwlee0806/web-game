@@ -151,8 +151,14 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
     p.hp = Math.min(p.hp + p.hpRegen, p.maxHp)
   }
 
-  // Sword rotation
-  p.swordAngle += p.swordSpeed * 0.05
+  // Sword: auto-aim toward nearest enemy + swing oscillation
+  if (s.enemies.length > 0) {
+    const nearest = s.enemies.reduce((c, e) => dist(e.pos, p.pos) < dist(c.pos, p.pos) ? e : c)
+    const targetAngle = Math.atan2(nearest.pos.y - p.pos.y, nearest.pos.x - p.pos.x)
+    const diff = Math.atan2(Math.sin(targetAngle - p.swordAngle), Math.cos(targetAngle - p.swordAngle))
+    p.swordAngle += diff * 0.15 // Strong tracking toward nearest enemy
+  }
+  p.swordAngle += p.swordSpeed * 0.03 // Slower base swing
   s.player = p
 
   // Wave progression (every 30 seconds)
@@ -405,15 +411,7 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
   }).filter(h => h.life > 0)
   s.player = p
 
-  // Sword auto-aim: bias rotation toward nearest enemy
-  if (s.enemies.length > 0) {
-    const nearest = s.enemies.reduce((c, e) => dist(e.pos, p.pos) < dist(c.pos, p.pos) ? e : c)
-    const targetAngle = Math.atan2(nearest.pos.y - p.pos.y, nearest.pos.x - p.pos.x)
-    const diff = targetAngle - p.swordAngle
-    const wrapped = Math.atan2(Math.sin(diff), Math.cos(diff))
-    p.swordAngle += wrapped * 0.03 // Gentle auto-aim bias
-    s.player = p
-  }
+  // (auto-aim now handled in sword rotation section above)
 
   // Damage numbers decay
   s.damageNumbers = s.damageNumbers.map(d => ({ ...d, pos: { x: d.pos.x, y: d.pos.y - 1 }, life: d.life - 1 })).filter(d => d.life > 0)

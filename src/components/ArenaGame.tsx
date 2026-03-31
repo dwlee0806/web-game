@@ -29,7 +29,11 @@ export default function ArenaGame({ swordLevel, onExit }: ArenaGameProps) {
     const keys = new Set<string>()
     const onDown = (e: KeyboardEvent) => {
       keys.add(e.key.toLowerCase())
-      if (e.key === ' ') { dashRef.current = true; e.preventDefault() }
+      // Prevent page scroll on arrow keys and space
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(e.key)) {
+        e.preventDefault()
+      }
+      if (e.key === ' ') dashRef.current = true
       if (e.key === 'Escape') setPaused(p => !p)
       updateInput()
     }
@@ -148,9 +152,10 @@ export default function ArenaGame({ swordLevel, onExit }: ArenaGameProps) {
   }, [finalState, onExit])
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-dvh bg-black p-2">
+    <div className="relative flex flex-col items-center justify-center h-dvh bg-black p-2 overflow-hidden" lang="en">
       <canvas
         ref={canvasRef}
+        tabIndex={0}
         width={ARENA_W}
         height={ARENA_H}
         className="border border-gray-800 rounded-lg max-w-full"

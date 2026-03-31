@@ -611,24 +611,29 @@ export default function Game() {
 
       <div className="relative z-20 flex flex-col flex-1 max-w-md mx-auto w-full">
         {/* Global feed ticker */}
-        <div className="px-4 pt-2"><GlobalFeed /></div>
+        <div className="px-4 pt-1.5"><GlobalFeed /></div>
 
-        <header className="px-4 pt-2 pb-2">
-          <div className="flex items-center justify-between mb-3">
-            <h1 className="text-lg font-bold text-gray-300">⚔️ {t('title', locale)}</h1>
-            {userId ? (
-              <button onClick={handleLogout} className="flex items-center gap-1 text-[10px] text-gray-600 hover:text-gray-400 transition-colors">
-                <HeroAvatar size={16} expression="normal" /> {userId} · 로그아웃
-              </button>
-            ) : (
-              <button onClick={() => { setMounted(false); setAutoMode(false) }} className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors">
-                로그인
-              </button>
-            )}
+        <header className="px-4 pt-1 pb-1.5">
+          {/* Row 1: Title (left) + User (right) */}
+          <div className="flex items-center justify-between mb-1.5">
+            <h1 className="font-display text-base font-bold text-white/80 tracking-tight">⚔️ {t('title', locale)}</h1>
+            <div className="flex items-center gap-2">
+              {userId ? (
+                <button onClick={handleLogout} className="flex items-center gap-1 text-[9px] text-white/30 hover:text-white/50 transition-colors">
+                  <HeroAvatar size={14} expression="normal" />
+                  <span className="max-w-[60px] truncate">{userId}</span>
+                  <span className="text-white/20">·</span>
+                  <span>로그아웃</span>
+                </button>
+              ) : (
+                <button onClick={() => { setMounted(false); setAutoMode(false) }} className="text-[9px] text-white/30 hover:text-white/50 transition-colors">로그인</button>
+              )}
+            </div>
           </div>
+          {/* Row 2: Gold (left) + Check-in (right) */}
           <div className="flex items-center justify-between">
-            <div className="text-yellow-400 font-bold text-lg">💰 {state.gold.toLocaleString()}G</div>
-            <button onClick={handleCheckIn} disabled={!checkable} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all active:scale-95 ${checkable ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}`}>
+            <div className="text-yellow-400 font-bold text-base tabular-nums">💰 {state.gold.toLocaleString()}G</div>
+            <button onClick={handleCheckIn} disabled={!checkable} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 active:scale-95 ${checkable ? 'gradient-primary text-white shadow-sm' : 'bg-white/[0.04] text-white/30 cursor-not-allowed'}`}>
               {checkable ? `📅 ${t('checkin', locale)}` : `✅ ${t('checkin_done', locale)}`}
             </button>
           </div>

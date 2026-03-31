@@ -192,33 +192,99 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: ArenaState) {
     ctx.globalAlpha = 1
   })
 
-  // Player
+  // ═══ HERO CHARACTER ═══
   const isInvincible = p.invincibleUntil > state.time
   const isDashing = p.dashUntil > 0
   if (isInvincible && !isDashing && Math.floor(state.time / 4) % 2 === 0) ctx.globalAlpha = 0.4
 
   // Dash trail
   if (isDashing) {
-    ctx.fillStyle = '#60A5FA40'
-    ctx.beginPath(); ctx.arc(p.pos.x, p.pos.y, 16, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#60A5FA30'
+    ctx.beginPath(); ctx.arc(p.pos.x, p.pos.y, 18, 0, Math.PI * 2); ctx.fill()
   }
 
-  // Player body
-  ctx.fillStyle = isDashing ? '#60A5FA' : '#FBBF24'
-  ctx.shadowColor = isDashing ? '#60A5FA' : '#FBBF24'; ctx.shadowBlur = 10
-  ctx.beginPath(); ctx.arc(p.pos.x, p.pos.y, 10, 0, Math.PI * 2); ctx.fill()
+  // Determine facing direction from sword angle (nearest enemy)
+  const facingAngle = p.swordAngle
+  const facingRight = Math.cos(facingAngle) >= 0
+
+  ctx.save()
+  ctx.translate(p.pos.x, p.pos.y)
+  if (!facingRight) ctx.scale(-1, 1)
+
+  // Hero body (SD character)
+  const hSize = 10
+  // Hair (golden blonde)
+  ctx.fillStyle = '#F5C518'
+  ctx.beginPath(); ctx.ellipse(0, -hSize * 0.6, hSize * 0.8, hSize * 0.7, 0, 0, Math.PI * 2); ctx.fill()
+  // Face
+  ctx.fillStyle = '#FFE4C4'
+  ctx.beginPath(); ctx.arc(0, -hSize * 0.3, hSize * 0.55, 0, Math.PI * 2); ctx.fill()
+  // Eyes
+  ctx.fillStyle = '#2C1810'
+  ctx.beginPath(); ctx.arc(-hSize * 0.18, -hSize * 0.35, 1.5, 0, Math.PI * 2); ctx.fill()
+  ctx.beginPath(); ctx.arc(hSize * 0.18, -hSize * 0.35, 1.5, 0, Math.PI * 2); ctx.fill()
+  // Eye highlights
+  ctx.fillStyle = '#3D7A35'
+  ctx.beginPath(); ctx.arc(-hSize * 0.18, -hSize * 0.38, 1, 0, Math.PI * 2); ctx.fill()
+  ctx.beginPath(); ctx.arc(hSize * 0.18, -hSize * 0.38, 1, 0, Math.PI * 2); ctx.fill()
+  // Red scarf
+  ctx.fillStyle = '#DC2626'
+  ctx.beginPath(); ctx.moveTo(-hSize * 0.4, hSize * 0.1); ctx.quadraticCurveTo(0, hSize * 0.3, hSize * 0.4, hSize * 0.1)
+  ctx.lineTo(hSize * 0.3, hSize * 0.2); ctx.quadraticCurveTo(0, hSize * 0.4, -hSize * 0.3, hSize * 0.2); ctx.fill()
+  // Armor
+  ctx.fillStyle = isDashing ? '#4080C0' : '#607080'
+  ctx.fillRect(-hSize * 0.45, hSize * 0.15, hSize * 0.9, hSize * 0.6)
+  ctx.fillStyle = isDashing ? '#5090D0' : '#7A8A9A'
+  ctx.fillRect(-hSize * 0.35, hSize * 0.2, hSize * 0.7, hSize * 0.3)
+  // Legs
+  ctx.fillStyle = '#505868'
+  const legBob = Math.sin(state.time * 0.2) * 2
+  ctx.fillRect(-hSize * 0.3, hSize * 0.75 + legBob, hSize * 0.25, hSize * 0.4)
+  ctx.fillRect(hSize * 0.05, hSize * 0.75 - legBob, hSize * 0.25, hSize * 0.4)
+  // Boots
+  ctx.fillStyle = '#4A3020'
+  ctx.fillRect(-hSize * 0.35, hSize * 1.1 + legBob, hSize * 0.35, hSize * 0.2)
+  ctx.fillRect(0, hSize * 1.1 - legBob, hSize * 0.35, hSize * 0.2)
+
+  ctx.restore()
+
+  // ═══ WEAPON SWING (slash arc instead of rotation) ═══
+  // Swing animation: sword arcs toward nearest enemy
+  const swingPhase = (Math.sin(p.swordAngle * 2) + 1) / 2 // 0-1 oscillation
+  const swingArc = (swingPhase - 0.5) * 1.2 // -0.6 to 0.6 rad
+  const weaponAngle = facingAngle + swingArc
+
+  const swordStart = 14
+  const tipX = p.pos.x + Math.cos(weaponAngle) * p.swordRange
+  const tipY = p.pos.y + Math.sin(weaponAngle) * p.swordRange
+  const startX = p.pos.x + Math.cos(weaponAngle) * swordStart
+  const startY = p.pos.y + Math.sin(weaponAngle) * swordStart
+
+  // Weapon aura glow (based on level)
+  if (state.swordLevel > 3) {
+    const tier = state.swordLevel < 3 ? '#9EAFC0' : state.swordLevel < 5 ? '#4FC3F7' : state.swordLevel < 7 ? '#AB47BC' : state.swordLevel < 9 ? '#FFB300' : state.swordLevel < 11 ? '#FF7043' : state.swordLevel < 13 ? '#EF5350' : state.swordLevel < 15 ? '#EC407A' : '#FFD700'
+    ctx.strokeStyle = tier; ctx.lineWidth = 6; ctx.globalAlpha = 0.15 + swingPhase * 0.15
+    ctx.shadowColor = tier; ctx.shadowBlur = 12
+    ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(tipX, tipY); ctx.stroke()
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1
+  }
+
+  // Weapon blade
+  ctx.strokeStyle = '#E8ECF0'; ctx.lineWidth = 3
+  ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 4
+  ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(tipX, tipY); ctx.stroke()
   ctx.shadowBlur = 0
 
-  // Sword
-  const tipX = p.pos.x + Math.cos(p.swordAngle) * p.swordRange
-  const tipY = p.pos.y + Math.sin(p.swordAngle) * p.swordRange
-  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 3
-  ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 8
-  ctx.beginPath()
-  ctx.moveTo(p.pos.x + Math.cos(p.swordAngle) * 12, p.pos.y + Math.sin(p.swordAngle) * 12)
-  ctx.lineTo(tipX, tipY); ctx.stroke()
-  ctx.shadowBlur = 0
-  ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(tipX, tipY, 4, 0, Math.PI * 2); ctx.fill()
+  // Swing trail arc (slash effect)
+  if (swingPhase > 0.3 && swingPhase < 0.8) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.arc(p.pos.x, p.pos.y, p.swordRange * 0.8, facingAngle - 0.6, facingAngle + 0.6)
+    ctx.stroke()
+  }
+
+  // Tip glow
+  ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(tipX, tipY, 3, 0, Math.PI * 2); ctx.fill()
 
   // Orbitals
   for (let o = 0; o < state.orbitals; o++) {
