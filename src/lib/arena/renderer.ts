@@ -258,43 +258,93 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: ArenaState) {
 
   ctx.restore()
 
-  // ═══ WEAPON SWING (slash arc instead of rotation) ═══
-  // Swing animation: sword arcs toward nearest enemy
-  const swingPhase = (Math.sin(p.swordAngle * 2) + 1) / 2 // 0-1 oscillation
-  const swingArc = (swingPhase - 0.5) * 1.2 // -0.6 to 0.6 rad
-  const weaponAngle = facingAngle + swingArc
+  // ═══ WEAPON SLASH MOTION ═══
+  // swingPhase: 0=raised/ready, 0.01→1=fast slash down, 1→0=slow raise back up
+  const sp = p.swingPhase
+  const isSlashing = sp > 0.05 && sp < 0.95
 
+  // Slash arc: raised position (-0.8 rad) → slashed position (+0.7 rad)
+  // Fast ease-in on slash, slow ease-out on recovery
+  let swingOffset: number
+  if (sp > 0 && sp <= 1) {
+    if (sp < 1) {
+      // Slash phase: fast ease-out curve (quick strike)
+      const t = Math.min(sp / 0.95, 1)
+      swingOffset = -0.8 + t * t * 1.5 // -0.8 → +0.7 (quadratic ease-in)
+    } else {
+      swingOffset = 0.7
+    }
+  } else {
+    swingOffset = -0.8 // Raised/ready position
+  }
+
+  const weaponAngle = facingAngle + swingOffset
+  const swordLen = p.swordRange
   const swordStart = 14
-  const tipX = p.pos.x + Math.cos(weaponAngle) * p.swordRange
-  const tipY = p.pos.y + Math.sin(weaponAngle) * p.swordRange
+  const tipX = p.pos.x + Math.cos(weaponAngle) * swordLen
+  const tipY = p.pos.y + Math.sin(weaponAngle) * swordLen
   const startX = p.pos.x + Math.cos(weaponAngle) * swordStart
   const startY = p.pos.y + Math.sin(weaponAngle) * swordStart
 
-  // Weapon aura glow (based on level)
-  if (state.swordLevel > 3) {
-    const tier = state.swordLevel < 3 ? '#9EAFC0' : state.swordLevel < 5 ? '#4FC3F7' : state.swordLevel < 7 ? '#AB47BC' : state.swordLevel < 9 ? '#FFB300' : state.swordLevel < 11 ? '#FF7043' : state.swordLevel < 13 ? '#EF5350' : state.swordLevel < 15 ? '#EC407A' : '#FFD700'
-    ctx.strokeStyle = tier; ctx.lineWidth = 6; ctx.globalAlpha = 0.15 + swingPhase * 0.15
-    ctx.shadowColor = tier; ctx.shadowBlur = 12
+  // Slash trail arc (only during fast slash)
+  if (isSlashing && sp < 0.7) {
+    const trailAlpha = (1 - sp) * 0.5
+    ctx.strokeStyle = `rgba(255,255,255,${trailAlpha})`
+    ctx.lineWidth = swordLen * 0.04
+    ctx.beginPath()
+    ctx.arc(p.pos.x, p.pos.y, swordLen * 0.85, facingAngle - 0.8, facingAngle + swingOffset)
+    ctx.stroke()
+
+    // Speed lines during slash
+    for (let i = 0; i < 3; i++) {
+      const lineAngle = facingAngle + swingOffset - 0.2 * i
+      const lineStart = swordLen * (0.4 + i * 0.15)
+      const lineEnd = swordLen * (0.6 + i * 0.15)
+      ctx.strokeStyle = `rgba(255,255,255,${0.3 - i * 0.1})`
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(p.pos.x + Math.cos(lineAngle) * lineStart, p.pos.y + Math.sin(lineAngle) * lineStart)
+      ctx.lineTo(p.pos.x + Math.cos(lineAngle) * lineEnd, p.pos.y + Math.sin(lineAngle) * lineEnd)
+      ctx.stroke()
+    }
+  }
+
+  // Weapon aura glow
+  const tierColor = state.swordLevel < 3 ? '#9EAFC0' : state.swordLevel < 5 ? '#4FC3F7' : state.swordLevel < 7 ? '#AB47BC' : state.swordLevel < 9 ? '#FFB300' : state.swordLevel < 11 ? '#FF7043' : state.swordLevel < 13 ? '#EF5350' : state.swordLevel < 15 ? '#EC407A' : '#FFD700'
+  if (state.swordLevel > 2) {
+    ctx.strokeStyle = tierColor; ctx.lineWidth = 7
+    ctx.globalAlpha = isSlashing ? 0.35 : 0.12
+    ctx.shadowColor = tierColor; ctx.shadowBlur = 15
     ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(tipX, tipY); ctx.stroke()
     ctx.shadowBlur = 0; ctx.globalAlpha = 1
   }
 
-  // Weapon blade
-  ctx.strokeStyle = '#E8ECF0'; ctx.lineWidth = 3
-  ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 4
+  // Weapon blade (thicker during slash for impact feel)
+  const bladeWidth = isSlashing ? 4 : 2.5
+  ctx.strokeStyle = '#E8ECF0'; ctx.lineWidth = bladeWidth
+  ctx.shadowColor = isSlashing ? '#FFF' : '#FFD700'; ctx.shadowBlur = isSlashing ? 8 : 3
   ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(tipX, tipY); ctx.stroke()
   ctx.shadowBlur = 0
 
-  // Swing trail arc (slash effect)
-  if (swingPhase > 0.3 && swingPhase < 0.8) {
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2
-    ctx.beginPath()
-    ctx.arc(p.pos.x, p.pos.y, p.swordRange * 0.8, facingAngle - 0.6, facingAngle + 0.6)
-    ctx.stroke()
-  }
+  // Guard (small cross at blade base)
+  const guardAngle = weaponAngle + Math.PI / 2
+  const gx = p.pos.x + Math.cos(weaponAngle) * (swordStart + 2)
+  const gy = p.pos.y + Math.sin(weaponAngle) * (swordStart + 2)
+  ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(gx + Math.cos(guardAngle) * 4, gy + Math.sin(guardAngle) * 4)
+  ctx.lineTo(gx - Math.cos(guardAngle) * 4, gy - Math.sin(guardAngle) * 4)
+  ctx.stroke()
 
-  // Tip glow
-  ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(tipX, tipY, 3, 0, Math.PI * 2); ctx.fill()
+  // Tip spark on slash impact
+  if (isSlashing && sp > 0.4 && sp < 0.7) {
+    ctx.fillStyle = '#FFF'
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 10
+    ctx.beginPath(); ctx.arc(tipX, tipY, 4 + Math.random() * 2, 0, Math.PI * 2); ctx.fill()
+    ctx.shadowBlur = 0
+  } else {
+    ctx.fillStyle = '#DDD'; ctx.beginPath(); ctx.arc(tipX, tipY, 2, 0, Math.PI * 2); ctx.fill()
+  }
 
   // Orbitals
   for (let o = 0; o < state.orbitals; o++) {

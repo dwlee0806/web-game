@@ -15,6 +15,8 @@ export interface Player {
   swordRange: number
   swordSpeed: number
   swordAngle: number
+  swingTimer: number   // counts up, resets on swing
+  swingPhase: number   // 0=idle, 0→1=fast slash, 1→0=slow recovery
   invincibleUntil: number
   dashCooldown: number
   dashUntil: number

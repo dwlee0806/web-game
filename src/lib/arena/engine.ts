@@ -21,7 +21,7 @@ export function createInitialState(swordLevel: number): ArenaState {
       pos: { x: ARENA_W / 2, y: ARENA_H / 2 },
       hp: baseHp, maxHp: baseHp, speed: baseSpeed, damage: baseDmg,
       xp: 0, level: 1, xpToNext: 10,
-      swordRange: 50 + swordLevel * 2, swordSpeed: 3 + swordLevel * 0.1, swordAngle: 0,
+      swordRange: 50 + swordLevel * 2, swordSpeed: 3 + swordLevel * 0.1, swordAngle: 0, swingTimer: 0, swingPhase: 0,
       invincibleUntil: 0, dashCooldown: 0, dashUntil: 0, hpRegen: 0,
     },
     enemies: [], particles: [], xpOrbs: [], damageNumbers: [], projectiles: [],
@@ -151,14 +151,33 @@ export function updateGame(state: ArenaState, input: Vec2, dt: number, dashInput
     p.hp = Math.min(p.hp + p.hpRegen, p.maxHp)
   }
 
-  // Sword: auto-aim toward nearest enemy + swing oscillation
+  // Sword: aim at nearest enemy + periodic slash motion
+  // Phase 0→1: fast downward slash, Phase 1→0: slow recovery (raise)
+  const swingInterval = Math.max(20, 45 - p.swordSpeed * 2) // faster at higher atk speed
+  p.swingTimer++
+
+  if (p.swingTimer >= swingInterval) {
+    p.swingTimer = 0
+    p.swingPhase = 0.01 // start new slash
+  }
+
+  // Swing progression: fast slash (0→1 in 6 frames), slow recovery (back to 0 in 20 frames)
+  if (p.swingPhase > 0 && p.swingPhase < 1) {
+    p.swingPhase = Math.min(1, p.swingPhase + 0.17) // ~6 frames to peak (FAST slash)
+  } else if (p.swingPhase >= 1) {
+    p.swingPhase = Math.max(0, p.swingPhase - 0.04) // ~25 frames to recover (SLOW raise)
+    if (p.swingPhase <= 0.01) p.swingPhase = 0
+  }
+
+  // Aim at nearest enemy (smooth tracking)
   if (s.enemies.length > 0) {
     const nearest = s.enemies.reduce((c, e) => dist(e.pos, p.pos) < dist(c.pos, p.pos) ? e : c)
     const targetAngle = Math.atan2(nearest.pos.y - p.pos.y, nearest.pos.x - p.pos.x)
     const diff = Math.atan2(Math.sin(targetAngle - p.swordAngle), Math.cos(targetAngle - p.swordAngle))
-    p.swordAngle += diff * 0.15 // Strong tracking toward nearest enemy
+    // During slash: don't redirect. During idle/recovery: track target
+    const trackSpeed = p.swingPhase > 0.1 && p.swingPhase < 0.9 ? 0.02 : 0.12
+    p.swordAngle += diff * trackSpeed
   }
-  p.swordAngle += p.swordSpeed * 0.03 // Slower base swing
   s.player = p
 
   // Wave progression (every 30 seconds)
