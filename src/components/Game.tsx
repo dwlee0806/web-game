@@ -100,6 +100,7 @@ export default function Game() {
   const [useProtection, setUseProtection] = useState(false)
   const [useBlessing, setUseBlessing] = useState(false)
   const [autoMode, setAutoMode] = useState(false)
+  const [autoTarget, setAutoTarget] = useState(16) // target level for auto-enhance
   const [achPopup, setAchPopup] = useState<Achievement | null>(null)
   const [particleType, setParticleType] = useState<'success' | 'destroy' | null>(null)
   const [showMagicCircle, setShowMagicCircle] = useState(false)
@@ -116,6 +117,8 @@ export default function Game() {
   stateRef.current = state
   const autoRef = useRef(false)
   autoRef.current = autoMode
+  const autoTargetRef = useRef(autoTarget)
+  autoTargetRef.current = autoTarget
   const missionsRef = useRef(missions)
   missionsRef.current = missions
   const soundRef = useRef(soundEnabled)
@@ -418,7 +421,7 @@ export default function Game() {
     if (!autoMode || !mounted || enhancing) return
     const s = stateRef.current
     const wLv = s.weapons[s.activeWeapon]?.level ?? s.level
-    if (wLv >= MAX_LEVEL || s.gold < getEnhanceCost(wLv)) { setAutoMode(false); return }
+    if (wLv >= MAX_LEVEL || wLv >= autoTargetRef.current || (!isAdmin(userId) && s.gold < getEnhanceCost(wLv))) { setAutoMode(false); return }
     const t = setTimeout(handleEnhance, 150)
     return () => clearTimeout(t)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -675,6 +678,7 @@ export default function Game() {
             showMagicCircle={showMagicCircle} levelBurst={levelBurst}
             soundEnabled={soundEnabled} onToggleSound={() => setSoundEnabled(s => !s)}
             gaugeActive={gaugeActive} gaugeProgress={gaugeProgress} shattered={shattered}
+            autoTarget={autoTarget} onAutoTargetChange={setAutoTarget}
             onEnhance={handleEnhance} onToggleAuto={() => setAutoMode(a => !a)}
             onToggleProtection={() => { setUseProtection(p => !p); if (soundEnabled) playClick() }}
             onToggleBlessing={() => { setUseBlessing(b => !b); if (soundEnabled) playClick() }}
@@ -759,7 +763,7 @@ function EnhanceContent({
   state, tier, rates, cost, canAfford, maxed, enhancing, result, autoMode,
   useProtection, useBlessing, particleType, showMagicCircle, levelBurst,
   soundEnabled, onToggleSound, gaugeActive, gaugeProgress, shattered,
-  onSelectWeapon, onUnlockWeapon,
+  autoTarget, onAutoTargetChange, onSelectWeapon, onUnlockWeapon,
   onEnhance, onToggleAuto, onToggleProtection, onToggleBlessing, onReset,
 }: {
   state: GameState; tier: { name: string; color: string }
@@ -772,6 +776,7 @@ function EnhanceContent({
   soundEnabled: boolean; onToggleSound: () => void
   gaugeActive: boolean; gaugeProgress: number; shattered: boolean
   onSelectWeapon: (id: string) => void; onUnlockWeapon: (id: string) => void
+  autoTarget: number; onAutoTargetChange: (v: number) => void
   onEnhance: () => void; onToggleAuto: () => void
   onToggleProtection: () => void; onToggleBlessing: () => void; onReset: () => void
 }) {
@@ -866,9 +871,23 @@ function EnhanceContent({
             </button>
 
             <div className="flex gap-2">
-              <button onClick={onToggleAuto} disabled={!canAfford && !autoMode} className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition-all ${autoMode ? 'bg-red-700 hover:bg-red-600 ring-2 ring-red-400/50 animate-pulse-ring' : canAfford ? 'bg-gray-800 hover:bg-gray-700 text-gray-300' : 'bg-gray-900 text-gray-600 cursor-not-allowed'}`}>
-                {autoMode ? '⏹️ 자동 중지' : '⚡ 자동 강화'}
+              <button onClick={onToggleAuto} disabled={!canAfford && !autoMode} className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition-all ${autoMode ? 'bg-red-700 hover:bg-red-600 ring-2 ring-red-400/50 animate-pulse-ring' : canAfford ? 'bg-white/[0.04] hover:bg-white/[0.07] text-white/60' : 'bg-white/[0.02] text-white/20 cursor-not-allowed'}`}>
+                {autoMode ? '⏹️ 중지' : '⚡ 자동'}
               </button>
+              {/* Auto target level selector */}
+              <div className="flex items-center gap-1 px-2 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                <span className="text-[9px] text-white/30">목표</span>
+                <select
+                  value={autoTarget}
+                  onChange={e => onAutoTargetChange(Number(e.target.value))}
+                  className="bg-transparent text-white/70 text-xs font-bold w-10 text-center focus:outline-none cursor-pointer"
+                  style={{ appearance: 'none' }}
+                >
+                  {Array.from({ length: 16 }, (_, i) => i + 1).map(lv => (
+                    <option key={lv} value={lv} className="bg-gray-900 text-white">+{lv}</option>
+                  ))}
+                </select>
+              </div>
               <button onClick={onToggleSound} className={`px-3 py-2.5 rounded-xl text-xs transition-colors ${soundEnabled ? 'bg-gray-800 text-gray-300' : 'bg-gray-900 text-gray-600'}`} aria-label="Toggle sound">
                 {soundEnabled ? '🔊' : '🔇'}
               </button>
