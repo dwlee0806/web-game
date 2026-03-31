@@ -46,13 +46,14 @@ import { WEAPONS } from '@/lib/weapons'
 import { getActiveEvents, getSuccessBoost, getCostDiscount } from '@/lib/events'
 import { detectLocale, t, type Locale } from '@/lib/i18n'
 import {
-  type DailyMissionState,
-  getInitialMissionState,
+  type AllMissionsState,
+  loadAllMissions,
+  saveAllMissions,
   getMissionById,
 } from '@/lib/missions'
 
 const DEFAULT_STORAGE_KEY = 'sword-enhance-v2'
-const DEFAULT_MISSIONS_KEY = 'sword-missions-v1'
+// Missions now managed by missions.ts (v2)
 type Tab = 'enhance' | 'shop' | 'missions' | 'achievements' | 'stats'
 
 function loadState(userId: string | null): GameState {
@@ -82,30 +83,13 @@ function saveState(state: GameState, userId: string | null) {
   try { localStorage.setItem(key, JSON.stringify({ ...state, lastOnline: Date.now() })) } catch { /* */ }
 }
 
-function loadMissions(userId: string | null): DailyMissionState {
-  const today = new Date().toISOString().split('T')[0]
-  if (typeof window === 'undefined') return getInitialMissionState(today)
-  const key = userId ? getUserMissionKey(userId) : DEFAULT_MISSIONS_KEY
-  try {
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      const parsed = JSON.parse(raw) as DailyMissionState
-      if (parsed.date === today) return parsed
-    }
-  } catch { /* */ }
-  return getInitialMissionState(today)
-}
-
-function saveMissions(m: DailyMissionState, userId: string | null) {
-  const key = userId ? getUserMissionKey(userId) : DEFAULT_MISSIONS_KEY
-  try { localStorage.setItem(key, JSON.stringify(m)) } catch { /* */ }
-}
+// Missions now use loadAllMissions/saveAllMissions from missions.ts
 
 export default function Game() {
   const [userId, setUserId] = useState<string | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
   const [state, setState] = useState<GameState>(INITIAL_STATE)
-  const [missions, setMissions] = useState<DailyMissionState>(() => getInitialMissionState(new Date().toISOString().split('T')[0]))
+  const [missions, setMissions] = useState<AllMissionsState>(() => loadAllMissions())
   const [mounted, setMounted] = useState(false)
   const [tab, setTab] = useState<Tab>('enhance')
   const [enhancing, setEnhancing] = useState(false)
@@ -147,7 +131,7 @@ export default function Game() {
     }
     loaded.lastOnline = Date.now()
     setState(loaded)
-    setMissions(loadMissions(uid))
+    setMissions(loadAllMissions())
     setMounted(true)
     setLocale(detectLocale())
     if (!localStorage.getItem('sword-guide-done')) {
@@ -181,31 +165,72 @@ export default function Game() {
   useEffect(() => {
     if (mounted) saveState(state, userId)
   }, [state, mounted, userId])
-  useEffect(() => { if (mounted) saveMissions(missions, userId) }, [missions, mounted, userId])
+  useEffect(() => { if (mounted) saveAllMissions(missions) }, [missions, mounted, userId])
 
-  const progressMission = useCallback((ids: string[], amounts?: Record<string, number>) => {
+  // Helper: update progress for a specific period
+  function updatePeriodProgress(prev: AllMissionsState, period: 'daily' | 'weekly' | 'monthly', updater: (progress: Record<string, number>, missions: string[], claimed: string[]) => Record<string, number>): AllMissionsState {
+    const p = prev[period]
+    const newProgress = updater({ ...p.data.progress }, p.missions, p.data.claimed)
+    if (newProgress === p.data.progress) return prev
+    const newData = { ...p.data, progress: newProgress }
+    if (period === 'daily') return { ...prev, daily: { ...prev.daily, data: newData } }
+    if (period === 'weekly') return { ...prev, weekly: { ...prev.weekly, data: newData } }
+    return { ...prev, monthly: { ...prev.monthly, data: newData } }
+  }
+
+  const progressMission = useCallback((ids: string[]) => {
     setMissions(prev => {
-      const progress = { ...prev.progress }
-      ids.forEach(id => {
-        if (prev.missionIds.includes(id) && !prev.claimed.includes(id)) {
-          progress[id] = (progress[id] ?? 0) + (amounts?.[id] ?? 1)
-        }
-      })
-      return { ...prev, progress }
+      let result = prev
+      for (const period of ['daily', 'weekly', 'monthly'] as const) {
+        result = updatePeriodProgress(result, period, (progress, missions, claimed) => {
+          ids.forEach(id => {
+            const base = id.replace(/^[dwm]_/, '')
+            missions.forEach(mid => {
+              if (mid.replace(/^[dwm]_/, '').startsWith(base) && !claimed.includes(mid)) {
+                progress[mid] = (progress[mid] ?? 0) + 1
+              }
+            })
+          })
+          return progress
+        })
+      }
+      return result
     })
   }, [])
 
   const resetMissionProgress = useCallback((id: string) => {
     setMissions(prev => {
-      if (!prev.missionIds.includes(id)) return prev
-      return { ...prev, progress: { ...prev.progress, [id]: 0 } }
+      let result = prev
+      const base = id.replace(/^[dwm]_/, '')
+      for (const period of ['daily', 'weekly', 'monthly'] as const) {
+        result = updatePeriodProgress(result, period, (progress, missions, claimed) => {
+          missions.forEach(mid => {
+            if (mid.replace(/^[dwm]_/, '').startsWith(base) && !claimed.includes(mid)) {
+              progress[mid] = 0
+            }
+          })
+          return progress
+        })
+      }
+      return result
     })
   }, [])
 
   const setMissionLevel = useCallback((id: string, level: number) => {
     setMissions(prev => {
-      if (!prev.missionIds.includes(id)) return prev
-      return { ...prev, progress: { ...prev.progress, [id]: Math.max(prev.progress[id] ?? 0, level) } }
+      let result = prev
+      const base = id.replace(/^[dwm]_/, '')
+      for (const period of ['daily', 'weekly', 'monthly'] as const) {
+        result = updatePeriodProgress(result, period, (progress, missions) => {
+          missions.forEach(mid => {
+            if (mid.replace(/^[dwm]_/, '').startsWith(base)) {
+              progress[mid] = Math.max(progress[mid] ?? 0, level)
+            }
+          })
+          return progress
+        })
+      }
+      return result
     })
   }, [])
 
@@ -403,12 +428,16 @@ export default function Game() {
     if (soundRef.current) playBuy()
   }, [progressMission])
 
-  const handleClaimMission = useCallback((missionId: string) => {
+  const handleClaimMission = useCallback((missionId: string, type: 'daily' | 'weekly' | 'monthly') => {
     const mission = getMissionById(missionId)
     if (!mission) return
     setMissions(prev => {
-      if (prev.claimed.includes(missionId)) return prev
-      return { ...prev, claimed: [...prev.claimed, missionId] }
+      const p = prev[type]
+      if (p.data.claimed.includes(missionId)) return prev
+      const newData = { ...p.data, claimed: [...p.data.claimed, missionId] }
+      if (type === 'daily') return { ...prev, daily: { ...prev.daily, data: newData } }
+      if (type === 'weekly') return { ...prev, weekly: { ...prev.weekly, data: newData } }
+      return { ...prev, monthly: { ...prev.monthly, data: newData } }
     })
     setState(prev => ({ ...prev, gold: prev.gold + mission.reward }))
   }, [])
@@ -473,8 +502,7 @@ export default function Game() {
     if (confirm('정말 초기화하시겠습니까? 모든 데이터가 삭제됩니다.')) {
       setAutoMode(false)
       setState(INITIAL_STATE)
-      const today = new Date().toISOString().split('T')[0]
-      setMissions(getInitialMissionState(today))
+      setMissions(loadAllMissions())
     }
   }, [])
 
@@ -496,10 +524,13 @@ export default function Game() {
   const canAfford = state.gold >= cost
   const maxed = state.level >= MAX_LEVEL
   const checkable = canCheckIn(state.lastCheckIn)
-  const unclaimedMissions = missions.missionIds.filter(id => {
-    const m = getMissionById(id)
-    return m && (missions.progress[id] ?? 0) >= m.target && !missions.claimed.includes(id)
-  }).length
+  const unclaimedMissions = (['daily', 'weekly', 'monthly'] as const).reduce((count, period) => {
+    const p = missions[period]
+    return count + p.missions.filter(id => {
+      const m = getMissionById(id)
+      return m && (p.data.progress[id] ?? 0) >= m.target && !p.data.claimed.includes(id)
+    }).length
+  }, 0)
 
   return (
     <div className="h-dvh bg-gray-950 lg:bg-transparent text-white flex flex-col select-none relative z-10 overflow-hidden">
